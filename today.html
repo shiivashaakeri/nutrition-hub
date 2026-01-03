@@ -427,6 +427,8 @@
         .highlight-item .info { flex: 1; }
         .highlight-item .info .title { font-weight: 600; font-size: 0.9rem; }
         .highlight-item .info .desc { font-size: 0.8rem; color: var(--text-muted); }
+        .view-full-week-btn { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .view-full-week-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(125,132,113,0.3); }
         
         /* Weekly Summary Card on Today Page */
         .weekly-card { background: linear-gradient(135deg, var(--bg-card), var(--accent-light)); border-radius: 20px; padding: 18px; margin: 0 20px 16px; border: 1px solid var(--border); cursor: pointer; transition: all 0.25s; }
@@ -517,7 +519,7 @@
     
     <!-- Weekly Summary + Calendar Buttons -->
     <div style="display:flex; gap:12px; margin:0 20px 16px;">
-        <div class="weekly-card" onclick="openWeeklySummary()" style="flex:1; margin:0;">
+        <div class="weekly-card" onclick="window.location.href='week.html'" style="flex:1; margin:0;">
             <div class="weekly-card-header">
                 <h4>📊 This Week</h4>
                 <span>View →</span>
@@ -2497,8 +2499,17 @@
                         </div>
                     ` : ''}
                 </div>
+                
+                <button class="view-full-week-btn" onclick="viewFullWeek()">
+                    View Full Week Dashboard →
+                </button>
             `;
         }
+        
+        window.viewFullWeek = function() {
+            closeModal('weeklySummaryModal');
+            window.location.href = 'week.html';
+        };
 
         window.openRingDetail = function(type) {
             const isProtein = type === 'protein';
