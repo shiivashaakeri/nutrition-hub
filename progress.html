@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Progress | Nutrition Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7d8471">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf9f7; --bg-card: #ffffff; --bg-secondary: #f3f1ee;
+            --text: #1a1a1a; --text-secondary: #6b6b6b; --text-muted: #999;
+            --accent: #7d8471; --accent-light: rgba(125,132,113,0.12);
+            --warm: #c4846c; --warm-light: rgba(196,132,108,0.12);
+            --border: rgba(0,0,0,0.06); --nav-height: 70px;
+            --success: #4caf50; --error: #e53935;
+        }
+        [data-theme="dark"] {
+            --bg: #111110; --bg-card: #1c1c1a; --bg-secondary: #242422;
+            --text: #f5f5f4; --text-secondary: #a3a3a3; --text-muted: #666;
+            --border: rgba(255,255,255,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-height) + 20px); }
+        
+        .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .loading-screen.hide { display: none; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-secondary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .header { padding: 20px; }
+        .header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; }
+        
+        /* Tabs */
+        .tabs { display: flex; background: var(--bg-secondary); border-radius: 14px; padding: 4px; }
+        .tab { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary); transition: all 0.15s; }
+        .tab.active { background: var(--bg-card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .content { padding: 20px; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border-radius: 18px; padding: 20px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+        .stat-card:active { transform: scale(0.98); }
+        .stat-card .icon { font-size: 1.5rem; margin-bottom: 8px; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-bottom: 2px; }
+        .stat-card .label { font-size: 0.8rem; color: var(--text-muted); }
+        .stat-card.highlight { background: linear-gradient(135deg, var(--accent), #5a6349); color: white; }
+        .stat-card.highlight .label { color: rgba(255,255,255,0.8); }
+        
+        /* Section */
+        .section { margin-bottom: 24px; }
+        .section-title { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+        .section-title .action { color: var(--accent); font-size: 0.8rem; cursor: pointer; }
+        
+        /* Chart */
+        .chart-card { background: var(--bg-card); border-radius: 18px; padding: 20px; border: 1px solid var(--border); margin-bottom: 24px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-header h3 { font-size: 1rem; font-weight: 600; }
+        .chart-toggle { display: flex; gap: 6px; }
+        .chart-toggle button { padding: 6px 12px; border: none; border-radius: 8px; background: var(--bg-secondary); font-size: 0.75rem; cursor: pointer; color: var(--text-secondary); }
+        .chart-toggle button.active { background: var(--accent); color: white; }
+        .chart-container { height: 150px; display: flex; align-items: flex-end; gap: 8px; padding: 10px 0; }
+        .chart-bar { flex: 1; background: var(--accent-light); border-radius: 6px 6px 0 0; transition: height 0.3s; cursor: pointer; position: relative; min-height: 4px; }
+        .chart-bar.hit { background: var(--accent); }
+        .chart-bar.partial { background: var(--warm-light); }
+        .chart-bar:hover::after { content: attr(data-value); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; }
+        .chart-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+        .chart-labels span { font-size: 0.7rem; color: var(--text-muted); flex: 1; text-align: center; }
+        
+        /* Streak Calendar */
+        .calendar-card { background: var(--bg-card); border-radius: 18px; padding: 20px; border: 1px solid var(--border); }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .calendar-header h3 { font-size: 1rem; font-weight: 600; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .calendar-nav button { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--bg-secondary); cursor: pointer; font-size: 0.9rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; }
+        .calendar-day.header { font-weight: 600; color: var(--text-muted); font-size: 0.7rem; }
+        .calendar-day.empty { background: transparent; }
+        .calendar-day.future { color: var(--text-muted); }
+        .calendar-day.missed { background: var(--bg-secondary); color: var(--text-muted); }
+        .calendar-day.hit { background: var(--accent); color: white; }
+        .calendar-day.partial { background: var(--accent-light); color: var(--accent); }
+        .calendar-day.today { box-shadow: inset 0 0 0 2px var(--warm); }
+        
+        /* Achievements Grid */
+        .achievements-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .achievement { text-align: center; cursor: pointer; padding: 12px 8px; border-radius: 14px; transition: all 0.15s; }
+        .achievement:hover { background: var(--bg-secondary); }
+        .achievement .badge { width: 50px; height: 50px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 8px; transition: all 0.2s; }
+        .achievement.unlocked .badge { background: linear-gradient(135deg, #ffd700, #ffb347); box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); }
+        .achievement.locked .badge { filter: grayscale(1); opacity: 0.4; }
+        .achievement .name { font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); }
+        .achievement.locked .name { color: var(--text-muted); }
+        
+        /* Rewards */
+        .reward-card { background: var(--bg-card); border-radius: 18px; padding: 20px; border: 1px solid var(--border); margin-bottom: 14px; }
+        .reward-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+        .reward-header .icon { font-size: 2rem; }
+        .reward-header .info h4 { font-size: 1rem; font-weight: 600; }
+        .reward-header .info p { font-size: 0.8rem; color: var(--text-muted); }
+        .reward-status { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .reward-progress { flex: 1; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+        .reward-progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+        .reward-progress-text { font-size: 0.8rem; color: var(--text-secondary); min-width: 60px; text-align: right; }
+        .reward-content { padding: 16px; background: var(--bg-secondary); border-radius: 14px; }
+        .reward-content label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+        .reward-content input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.9rem; background: var(--bg-card); color: var(--text); font-family: inherit; margin-bottom: 10px; }
+        .reward-content input:focus { outline: none; border-color: var(--accent); }
+        .reward-link { display: flex; gap: 8px; }
+        .reward-link input { flex: 1; margin-bottom: 0; }
+        .reward-link button { padding: 12px 16px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+        .reward-link button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .reward-claimed { text-align: center; padding: 16px; }
+        .reward-claimed .icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .reward-claimed p { font-size: 0.9rem; color: var(--text-secondary); }
+        .reward-unlocked { background: linear-gradient(135deg, var(--accent-light), var(--warm-light)); }
+        .claim-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 12px; }
+        
+        /* Body Measurements */
+        .measurement-card { background: var(--bg-card); border-radius: 18px; padding: 20px; border: 1px solid var(--border); margin-bottom: 14px; }
+        .measurement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .measurement-header h4 { font-size: 0.95rem; font-weight: 600; }
+        .measurement-header .date { font-size: 0.8rem; color: var(--text-muted); }
+        .measurement-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .measurement-item { background: var(--bg-secondary); border-radius: 12px; padding: 14px; text-align: center; }
+        .measurement-item .value { font-size: 1.3rem; font-weight: 700; }
+        .measurement-item .label { font-size: 0.75rem; color: var(--text-muted); }
+        .measurement-item .change { font-size: 0.7rem; margin-top: 4px; }
+        .measurement-item .change.positive { color: var(--error); }
+        .measurement-item .change.negative { color: var(--success); }
+        .add-measurement-btn { width: 100%; padding: 14px; background: var(--bg-secondary); border: 2px dashed var(--border); border-radius: 14px; font-family: inherit; font-size: 0.9rem; cursor: pointer; color: var(--text-secondary); margin-top: 16px; transition: all 0.15s; }
+        .add-measurement-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .reminder-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--warm-light); color: var(--warm); border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; }
+        
+        /* History List */
+        .history-list { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; }
+        .history-item { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+        .history-item:last-child { border-bottom: none; }
+        .history-item:active { background: var(--bg-secondary); }
+        .history-item .date { min-width: 80px; }
+        .history-item .date .day { font-size: 0.9rem; font-weight: 600; }
+        .history-item .date .full { font-size: 0.7rem; color: var(--text-muted); }
+        .history-item .stats { flex: 1; display: flex; gap: 16px; }
+        .history-item .stat { text-align: center; }
+        .history-item .stat .value { font-size: 0.9rem; font-weight: 600; }
+        .history-item .stat .label { font-size: 0.65rem; color: var(--text-muted); }
+        .history-item .status { font-size: 1.2rem; }
+        
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 1.4rem; }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 14px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; z-index: 300; opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-center { background: var(--bg-card); border-radius: 24px; width: 90%; max-width: 360px; padding: 32px; text-align: center; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.show .modal-center { transform: scale(1); }
+        
+        /* Achievement Modal */
+        .achievement-modal .icon { font-size: 5rem; margin-bottom: 16px; }
+        .achievement-modal .badge-glow { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #ffd700, #ffb347); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 20px; box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4); animation: glow 2s ease-in-out infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4); } to { box-shadow: 0 12px 48px rgba(255, 215, 0, 0.6); } }
+        .achievement-modal h2 { font-size: 1.4rem; margin-bottom: 8px; }
+        .achievement-modal .desc { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .achievement-modal .date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; }
+        .achievement-modal .progress-text { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+        .achievement-modal .btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .achievement-modal.locked .badge-glow { background: var(--bg-secondary); filter: grayscale(1); box-shadow: none; animation: none; }
+        
+        /* Bottom Sheet Modal */
+        .modal-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-bottom.show { opacity: 1; pointer-events: auto; }
+        .modal-sheet { background: var(--bg-card); border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.3s; }
+        .modal-bottom.show .modal-sheet { transform: translateY(0); }
+        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+        .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; }
+        
+        /* Input Groups */
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; background: var(--bg-secondary); color: var(--text); font-family: inherit; }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+        .input-row { display: flex; gap: 12px; }
+        .input-row .input-group { flex: 1; }
+        .save-btn { width: 100%; padding: 18px; background: var(--accent); color: white; border: none; border-radius: 14px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        
+        /* Confetti */
+        .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen"><div class="spinner"></div></div>
+    <div class="toast" id="toast"></div>
+    <canvas class="confetti" id="confetti"></canvas>
+    
+    <header class="header">
+        <h1>📈 Progress</h1>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">Overview</button>
+            <button class="tab" onclick="showTab('body')">Body</button>
+            <button class="tab" onclick="showTab('achievements')">🏆</button>
+            <button class="tab" onclick="showTab('rewards')">🎁</button>
+        </div>
+    </header>
+    
+    <div class="content">
+        <!-- Overview Tab -->
+        <div id="overviewTab">
+            <div class="stats-grid">
+                <div class="stat-card highlight" onclick="openStreakCalendar()">
+                    <div class="icon">🔥</div>
+                    <div class="value" id="streakValue">0</div>
+                    <div class="label">Day Streak</div>
+                </div>
+                <div class="stat-card" onclick="showHistoryDetail()">
+                    <div class="icon">📅</div>
+                    <div class="value" id="daysValue">0</div>
+                    <div class="label">Days Logged</div>
+                </div>
+                <div class="stat-card" onclick="showPRsDetail()">
+                    <div class="icon">🏆</div>
+                    <div class="value" id="prsValue">0</div>
+                    <div class="label">Personal Records</div>
+                </div>
+                <div class="stat-card" onclick="showWeightDetail()">
+                    <div class="icon">⚖️</div>
+                    <div class="value" id="weightChangeValue">--</div>
+                    <div class="label">Weight Change</div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Protein Intake</h3>
+                    <div class="chart-toggle">
+                        <button class="active" onclick="setChartRange(7)">7D</button>
+                        <button onclick="setChartRange(14)">14D</button>
+                        <button onclick="setChartRange(30)">30D</button>
+                    </div>
+                </div>
+                <div class="chart-container" id="proteinChart"></div>
+                <div class="chart-labels" id="chartLabels"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>Recent History</span>
+                    <span>
+                        <span class="action" style="color:var(--text-muted); margin-right:12px;" onclick="clearAllHistory()">Clear</span>
+                        <span class="action" onclick="showAllHistory()">See All →</span>
+                    </span>
+                </div>
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </div>
+        
+        <!-- Body Tab -->
+        <div id="bodyTab" style="display:none;">
+            <div id="measurementReminder"></div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Weight Trend</h3>
+                </div>
+                <div class="chart-container" id="weightChart"></div>
+                <div class="chart-labels" id="weightLabels"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>Body Measurements</span>
+                </div>
+                <div id="measurementsList"></div>
+                <button class="add-measurement-btn" onclick="openAddMeasurement()">+ Add New Measurements</button>
+            </div>
+        </div>
+        
+        <!-- Achievements Tab -->
+        <div id="achievementsTab" style="display:none;">
+            <div class="stats-grid" style="margin-bottom:20px;">
+                <div class="stat-card">
+                    <div class="value" id="unlockedCount">0</div>
+                    <div class="label">Unlocked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="totalBadges">0</div>
+                    <div class="label">Total Badges</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🔥 Consistency</div>
+                <div class="achievements-grid" id="consistencyBadges"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">💪 Strength</div>
+                <div class="achievements-grid" id="strengthBadges"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">🎯 Goals</div>
+                <div class="achievements-grid" id="goalsBadges"></div>
+            </div>
+        </div>
+        
+        <!-- Rewards Tab -->
+        <div id="rewardsTab" style="display:none;">
+            <div id="rewardsList"></div>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="today.html" class="nav-item"><span class="nav-icon">📊</span><span>Today</span></a>
+        <a href="gym.html" class="nav-item"><span class="nav-icon">🏋️</span><span>Gym</span></a>
+        <a href="food.html" class="nav-item"><span class="nav-icon">🍽️</span><span>Food</span></a>
+        <a href="progress.html" class="nav-item active"><span class="nav-icon">📈</span><span>Progress</span></a>
+    </nav>
+    
+    <!-- Achievement Detail Modal -->
+    <div class="modal-overlay" id="achievementModal">
+        <div class="modal-center achievement-modal" id="achievementContent">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+    
+    <!-- Streak Calendar Modal -->
+    <div class="modal-bottom" id="calendarModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🔥 Streak Calendar</h3>
+                <button class="modal-close" onclick="closeModal('calendarModal')">✕</button>
+            </div>
+            <div class="calendar-card" style="border:none;padding:0;">
+                <div class="calendar-header">
+                    <h3 id="calendarMonth">January 2026</h3>
+                    <div class="calendar-nav">
+                        <button onclick="changeMonth(-1)">←</button>
+                        <button onclick="changeMonth(1)">→</button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+            <div class="stats-grid" style="margin-top:20px;">
+                <div class="stat-card">
+                    <div class="value" id="modalStreak">0</div>
+                    <div class="label">Current Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="modalLongest">0</div>
+                    <div class="label">Longest Streak</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Measurement Modal -->
+    <div class="modal-bottom" id="measurementModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>📏 Add Measurements</h3>
+                <button class="modal-close" onclick="closeModal('measurementModal')">✕</button>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Waist (cm)</label>
+                    <input type="number" id="measureWaist" placeholder="0">
+                </div>
+                <div class="input-group">
+                    <label>Stomach (cm)</label>
+                    <input type="number" id="measureStomach" placeholder="0">
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Chest (cm)</label>
+                    <input type="number" id="measureChest" placeholder="0">
+                </div>
+                <div class="input-group">
+                    <label>Hips (cm)</label>
+                    <input type="number" id="measureHips" placeholder="0">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Thighs (cm)</label>
+                <input type="number" id="measureThighs" placeholder="0">
+            </div>
+            <button class="save-btn" onclick="saveMeasurement()">Save Measurements</button>
+        </div>
+    </div>
+    
+    <!-- Full History Modal -->
+    <div class="modal-bottom" id="historyModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>📅 Full History</h3>
+                <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+            </div>
+            <div class="history-list" id="fullHistoryList" style="max-height:60vh; overflow-y:auto;"></div>
+        </div>
+    </div>
+    
+    <!-- Day Detail Modal -->
+    <div class="modal-bottom" id="dayDetailModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 id="dayDetailTitle">Day Details</h3>
+                <button class="modal-close" onclick="closeModal('dayDetailModal')">✕</button>
+            </div>
+            <div style="padding-bottom: 16px;">
+                <div class="stats-grid" style="margin-bottom:16px;">
+                    <div class="stat-card">
+                        <div class="value" id="dayProtein">0g</div>
+                        <div class="label">Protein</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="dayCalories">0</div>
+                        <div class="label">Calories</div>
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">🍽️ Foods Logged:</div>
+                    <div id="dayFoodsList"></div>
+                </div>
+                <div style="margin-bottom:16px;" id="dayWorkoutSection">
+                    <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">🏋️ Workout:</div>
+                    <div id="dayWorkout" style="padding:12px; background:var(--bg-secondary); border-radius:10px;"></div>
+                </div>
+                <button class="save-btn" style="background:var(--error);" onclick="deleteDay()">🗑️ Delete This Day</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PRs Modal -->
+    <div class="modal-bottom" id="prsModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🏆 Personal Records</h3>
+                <button class="modal-close" onclick="closeModal('prsModal')">✕</button>
+            </div>
+            <div id="prsList" style="max-height:60vh; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3FOyamcpwss0nWLFyFeSIHEn29Ew8kcU",
+            authDomain: "nutrition-hub-e010a.firebaseapp.com",
+            projectId: "nutrition-hub-e010a",
+            storageBucket: "nutrition-hub-e010a.firebasestorage.app",
+            messagingSenderId: "48854042250",
+            appId: "1:48854042250:web:b71cc4a22dadb6258c8f73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null;
+        let userData = null;
+        let history = [];
+        let prs = {};
+        let weightData = [];
+        let measurements = [];
+        let rewards = [];
+        let earnedBadges = [];
+        let goals = { protein: 125, calories: 1550 };
+        let chartRange = 7;
+        let calendarMonth = new Date();
+        const todayDate = new Date();
+        const today = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + String(todayDate.getDate()).padStart(2, '0');
+
+        // Achievement definitions
+        const achievements = {
+            consistency: [
+                { id: 'streak7', name: 'Week Warrior', desc: 'Hit your protein goal 7 days in a row', icon: '🔥', requirement: 7 },
+                { id: 'streak14', name: 'Fortnight Fighter', desc: '14-day protein streak', icon: '💪', requirement: 14 },
+                { id: 'streak30', name: 'Monthly Master', desc: '30-day protein streak', icon: '👑', requirement: 30 },
+                { id: 'streak60', name: 'Iron Will', desc: '60-day streak!', icon: '🏅', requirement: 60 },
+            ],
+            strength: [
+                { id: 'pr1', name: 'First PR', desc: 'Set your first personal record', icon: '🏋️', requirement: 1 },
+                { id: 'pr5', name: 'PR Machine', desc: 'Set 5 personal records', icon: '💥', requirement: 5 },
+                { id: 'pr10', name: 'Beast Mode', desc: 'Set 10 personal records', icon: '🦁', requirement: 10 },
+                { id: 'workout25', name: 'Gym Rat', desc: 'Complete 25 workouts', icon: '🐀', requirement: 25 },
+            ],
+            goals: [
+                { id: 'days10', name: 'Getting Started', desc: 'Log 10 days', icon: '🌱', requirement: 10 },
+                { id: 'days30', name: 'Habit Forming', desc: 'Log 30 days', icon: '🌿', requirement: 30 },
+                { id: 'days100', name: 'Centurion', desc: 'Log 100 days', icon: '💯', requirement: 100 },
+                { id: 'protein150', name: 'Protein King', desc: 'Hit 150g protein in a day', icon: '🥩', requirement: 150 },
+            ]
+        };
+
+        // Default rewards
+        const defaultRewards = [
+            { id: 'r1', month: 1, days: 30, title: 'Month 1 Milestone', reward: '', link: '', claimed: false },
+            { id: 'r2', month: 2, days: 60, title: 'Month 2 Milestone', reward: '', link: '', claimed: false },
+            { id: 'r3', month: 3, days: 90, title: 'Month 3 Milestone', reward: '', link: '', claimed: false },
+            { id: 'r4', month: 4, days: 120, title: 'Month 4 Milestone', reward: '', link: '', claimed: false },
+            { id: 'r5', month: 5, days: 150, title: 'Month 5 Milestone', reward: '', link: '', claimed: false },
+            { id: 'r6', month: 6, days: 180, title: 'Month 6 Milestone', reward: '', link: '', claimed: false },
+        ];
+
+        onAuthStateChanged(auth, async (u) => {
+            if (!u) { window.location.href = 'auth.html'; return; }
+            user = u;
+            await loadData();
+            hideLoading();
+            render();
+            applyTheme();
+        });
+
+        async function loadData() {
+            // User data
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                userData = userDoc.data();
+                goals = userData.goals || goals;
+            }
+
+            // History
+            const daysSnap = await getDocs(collection(db, 'users', user.uid, 'days'));
+            history = [];
+            daysSnap.forEach(d => history.push(d.data()));
+            // Sort by date string directly (YYYY-MM-DD format sorts correctly as strings)
+            history.sort((a, b) => b.date.localeCompare(a.date));
+
+            // PRs
+            const prDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'prs'));
+            prs = prDoc.exists() ? prDoc.data() : {};
+
+            // Weight
+            const weightDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'weight'));
+            weightData = weightDoc.exists() ? weightDoc.data().list || [] : [];
+
+            // Measurements
+            const measDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'measurements'));
+            measurements = measDoc.exists() ? measDoc.data().list || [] : [];
+
+            // Rewards
+            const rewardDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'rewards'));
+            rewards = rewardDoc.exists() ? rewardDoc.data().list || [] : [...defaultRewards];
+
+            // Badges
+            const badgeDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'badges'));
+            earnedBadges = badgeDoc.exists() ? badgeDoc.data().list || [] : [];
+
+            // Check for new badges
+            await checkAndAwardBadges();
+        }
+
+        async function checkAndAwardBadges() {
+            const streak = calculateStreak();
+            const daysLogged = history.filter(h => h.protein > 0).length;
+            const prCount = Object.keys(prs).length;
+            const workoutCount = history.filter(h => h.workout?.completed).length;
+            const maxProtein = Math.max(...history.map(h => h.protein || 0), 0);
+            
+            let newBadges = [];
+
+            // Check consistency badges
+            if (streak >= 7 && !earnedBadges.includes('streak7')) newBadges.push('streak7');
+            if (streak >= 14 && !earnedBadges.includes('streak14')) newBadges.push('streak14');
+            if (streak >= 30 && !earnedBadges.includes('streak30')) newBadges.push('streak30');
+            if (streak >= 60 && !earnedBadges.includes('streak60')) newBadges.push('streak60');
+
+            // Check strength badges
+            if (prCount >= 1 && !earnedBadges.includes('pr1')) newBadges.push('pr1');
+            if (prCount >= 5 && !earnedBadges.includes('pr5')) newBadges.push('pr5');
+            if (prCount >= 10 && !earnedBadges.includes('pr10')) newBadges.push('pr10');
+            if (workoutCount >= 25 && !earnedBadges.includes('workout25')) newBadges.push('workout25');
+
+            // Check goals badges
+            if (daysLogged >= 10 && !earnedBadges.includes('days10')) newBadges.push('days10');
+            if (daysLogged >= 30 && !earnedBadges.includes('days30')) newBadges.push('days30');
+            if (daysLogged >= 100 && !earnedBadges.includes('days100')) newBadges.push('days100');
+            if (maxProtein >= 150 && !earnedBadges.includes('protein150')) newBadges.push('protein150');
+
+            if (newBadges.length > 0) {
+                earnedBadges = [...earnedBadges, ...newBadges];
+                await setDoc(doc(db, 'users', user.uid, 'data', 'badges'), { list: earnedBadges });
+                
+                // Show first new badge
+                setTimeout(() => {
+                    openAchievementModal(newBadges[0], true);
+                    triggerConfetti();
+                }, 500);
+            }
+        }
+
+        function calculateStreak() {
+            let streak = 0;
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            for (const day of sorted) {
+                if (day.protein >= goals.protein * 0.9) streak++;
+                else break;
+            }
+            return streak;
+        }
+
+        function calculateLongestStreak() {
+            let longest = 0;
+            let current = 0;
+            const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+            for (const day of sorted) {
+                if (day.protein >= goals.protein * 0.9) {
+                    current++;
+                    longest = Math.max(longest, current);
+                } else {
+                    current = 0;
+                }
+            }
+            return longest;
+        }
+
+        function hideLoading() { document.getElementById('loadingScreen').classList.add('hide'); }
+
+        function render() {
+            renderOverview();
+            renderBody();
+            renderAchievements();
+            renderRewards();
+        }
+
+        function renderOverview() {
+            const streak = calculateStreak();
+            const daysLogged = history.filter(h => h.protein > 0).length;
+            const prCount = Object.keys(prs).length;
+            
+            document.getElementById('streakValue').textContent = streak;
+            document.getElementById('daysValue').textContent = daysLogged;
+            document.getElementById('prsValue').textContent = prCount;
+            
+            if (weightData.length >= 2) {
+                const first = weightData[0].weight;
+                const last = weightData[weightData.length - 1].weight;
+                const diff = (last - first).toFixed(1);
+                document.getElementById('weightChangeValue').textContent = (diff > 0 ? '+' : '') + diff + 'kg';
+            }
+
+            renderProteinChart();
+            renderRecentHistory();
+        }
+
+        function renderProteinChart() {
+            const container = document.getElementById('proteinChart');
+            const labels = document.getElementById('chartLabels');
+            
+            const days = [];
+            for (let i = chartRange - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                days.push(dateStr);
+            }
+            
+            const maxProtein = Math.max(goals.protein, ...days.map(d => {
+                const day = history.find(h => h.date === d);
+                return day?.protein || 0;
+            }));
+            
+            container.innerHTML = days.map(d => {
+                const day = history.find(h => h.date === d);
+                const protein = day?.protein || 0;
+                const height = (protein / maxProtein) * 100;
+                const status = protein >= goals.protein ? 'hit' : protein >= goals.protein * 0.8 ? 'partial' : '';
+                return `<div class="chart-bar ${status}" style="height:${Math.max(4, height)}%" data-value="${protein}g protein"></div>`;
+            }).join('');
+            
+            labels.innerHTML = days.map((d, i) => {
+                if (chartRange <= 7 || i % Math.ceil(chartRange / 7) === 0) {
+                    return `<span>${new Date(d).toLocaleDateString('en-US', { weekday: 'short' })}</span>`;
+                }
+                return '<span></span>';
+            }).join('');
+        }
+
+        function renderRecentHistory() {
+            // Deduplicate by date (keep most recent entry for each date)
+            const uniqueHistory = [];
+            const seenDates = new Set();
+            for (const day of history) {
+                if (!seenDates.has(day.date)) {
+                    seenDates.add(day.date);
+                    uniqueHistory.push(day);
+                }
+            }
+            
+            const recent = uniqueHistory.slice(0, 5);
+            document.getElementById('historyList').innerHTML = recent.map(day => {
+                // Parse date as local time by adding T12:00:00 to avoid timezone issues
+                const date = new Date(day.date + 'T12:00:00');
+                const hitGoal = day.protein >= goals.protein;
+                return `
+                    <div class="history-item" onclick="openDayDetail('${day.date}')">
+                        <div class="date">
+                            <div class="day">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                            <div class="full">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        </div>
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="value">${day.protein || 0}g</div>
+                                <div class="label">Protein</div>
+                            </div>
+                            <div class="stat">
+                                <div class="value">${day.calories || 0}</div>
+                                <div class="label">Calories</div>
+                            </div>
+                            <div class="stat">
+                                <div class="value">${day.water || 0}/${goals.water || 8}</div>
+                                <div class="label">Water</div>
+                            </div>
+                        </div>
+                        <div class="status">${hitGoal ? '✅' : '○'}</div>
+                    </div>
+                `;
+            }).join('') || '<div style="padding:20px;text-align:center;color:var(--text-muted);">No history yet</div>';
+        }
+
+        function renderBody() {
+            // Check for measurement reminder (1st of month)
+            const isFirstOfMonth = new Date().getDate() === 1;
+            const hasThisMonth = measurements.some(m => {
+                const d = new Date(m.date);
+                return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+            });
+            
+            if (isFirstOfMonth && !hasThisMonth) {
+                document.getElementById('measurementReminder').innerHTML = `
+                    <div class="reminder-badge">📏 Time for monthly measurements!</div>
+                `;
+            } else {
+                document.getElementById('measurementReminder').innerHTML = '';
+            }
+
+            renderWeightChart();
+            renderMeasurements();
+        }
+
+        function renderWeightChart() {
+            const container = document.getElementById('weightChart');
+            const labels = document.getElementById('weightLabels');
+            
+            if (weightData.length < 2) {
+                container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">Log weight to see trends</div>';
+                labels.innerHTML = '';
+                return;
+            }
+
+            const recent = weightData.slice(-7);
+            const min = Math.min(...recent.map(w => w.weight)) - 1;
+            const max = Math.max(...recent.map(w => w.weight)) + 1;
+            const range = max - min;
+
+            container.innerHTML = recent.map(w => {
+                const height = ((w.weight - min) / range) * 100;
+                return `<div class="chart-bar hit" style="height:${height}%" data-value="${w.weight}kg"></div>`;
+            }).join('');
+
+            labels.innerHTML = recent.map(w => {
+                const d = new Date(w.date);
+                return `<span>${d.getDate()}/${d.getMonth() + 1}</span>`;
+            }).join('');
+        }
+
+        function renderMeasurements() {
+            const container = document.getElementById('measurementsList');
+            
+            if (measurements.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:32px;color:var(--text-muted);">
+                        <div style="font-size:3rem;margin-bottom:12px;">📏</div>
+                        <p>No measurements yet</p>
+                        <p style="font-size:0.85rem;">Track your body changes monthly</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const latest = measurements[measurements.length - 1];
+            const previous = measurements.length > 1 ? measurements[measurements.length - 2] : null;
+
+            const items = [
+                { key: 'waist', label: 'Waist' },
+                { key: 'stomach', label: 'Stomach' },
+                { key: 'chest', label: 'Chest' },
+                { key: 'hips', label: 'Hips' },
+                { key: 'thighs', label: 'Thighs' },
+            ];
+
+            container.innerHTML = `
+                <div class="measurement-card">
+                    <div class="measurement-header">
+                        <h4>Latest Measurements</h4>
+                        <span class="date">${new Date(latest.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="measurement-grid">
+                        ${items.map(item => {
+                            const value = latest[item.key];
+                            if (!value) return '';
+                            const prev = previous?.[item.key];
+                            const diff = prev ? (value - prev).toFixed(1) : null;
+                            return `
+                                <div class="measurement-item">
+                                    <div class="value">${value} cm</div>
+                                    <div class="label">${item.label}</div>
+                                    ${diff ? `<div class="change ${parseFloat(diff) > 0 ? 'positive' : 'negative'}">${diff > 0 ? '+' : ''}${diff} cm</div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAchievements() {
+            const allBadges = [...achievements.consistency, ...achievements.strength, ...achievements.goals];
+            const unlockedCount = earnedBadges.length;
+            
+            document.getElementById('unlockedCount').textContent = unlockedCount;
+            document.getElementById('totalBadges').textContent = allBadges.length;
+
+            const renderCategory = (category, containerId) => {
+                document.getElementById(containerId).innerHTML = category.map(badge => {
+                    const unlocked = earnedBadges.includes(badge.id);
+                    return `
+                        <div class="achievement ${unlocked ? 'unlocked' : 'locked'}" onclick="openAchievementModal('${badge.id}')">
+                            <div class="badge">${badge.icon}</div>
+                            <div class="name">${badge.name}</div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            renderCategory(achievements.consistency, 'consistencyBadges');
+            renderCategory(achievements.strength, 'strengthBadges');
+            renderCategory(achievements.goals, 'goalsBadges');
+        }
+
+        function renderRewards() {
+            const startDate = userData?.startDate ? new Date(userData.startDate) : new Date();
+            const daysSinceStart = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+
+            document.getElementById('rewardsList').innerHTML = rewards.map(r => {
+                const progress = Math.min(100, (daysSinceStart / r.days) * 100);
+                const unlocked = daysSinceStart >= r.days;
+                const daysLeft = r.days - daysSinceStart;
+
+                return `
+                    <div class="reward-card ${unlocked && !r.claimed ? 'reward-unlocked' : ''}">
+                        <div class="reward-header">
+                            <span class="icon">${unlocked ? '🎁' : '🎯'}</span>
+                            <div class="info">
+                                <h4>${r.title}</h4>
+                                <p>${r.days} days of tracking</p>
+                            </div>
+                        </div>
+                        ${r.claimed ? `
+                            <div class="reward-claimed">
+                                <div class="icon">✅</div>
+                                <p>Reward claimed!</p>
+                            </div>
+                        ` : `
+                            <div class="reward-status">
+                                <div class="reward-progress">
+                                    <div class="reward-progress-fill" style="width:${progress}%"></div>
+                                </div>
+                                <div class="reward-progress-text">${unlocked ? '🎉 Unlocked!' : daysLeft + ' days left'}</div>
+                            </div>
+                            <div class="reward-content">
+                                <label>My Reward</label>
+                                <input type="text" value="${r.reward || ''}" placeholder="e.g., New workout clothes" onchange="updateRewardText('${r.id}', this.value)">
+                                <label>Product Link (optional)</label>
+                                <div class="reward-link">
+                                    <input type="url" value="${r.link || ''}" placeholder="https://amazon.com/..." onchange="updateRewardLink('${r.id}', this.value)">
+                                    <button ${!r.link ? 'disabled' : ''} onclick="window.open('${r.link}', '_blank')">🛒 View</button>
+                                </div>
+                                ${unlocked ? '<button class="claim-btn" onclick="claimReward(\'' + r.id + '\')">🎁 Claim Reward!</button>' : ''}
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.showTab = function(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('overviewTab').style.display = tab === 'overview' ? 'block' : 'none';
+            document.getElementById('bodyTab').style.display = tab === 'body' ? 'block' : 'none';
+            document.getElementById('achievementsTab').style.display = tab === 'achievements' ? 'block' : 'none';
+            document.getElementById('rewardsTab').style.display = tab === 'rewards' ? 'block' : 'none';
+        };
+
+        window.setChartRange = function(days) {
+            chartRange = days;
+            document.querySelectorAll('.chart-toggle button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProteinChart();
+        };
+
+        window.openStreakCalendar = function() {
+            renderCalendar();
+            document.getElementById('modalStreak').textContent = calculateStreak();
+            document.getElementById('modalLongest').textContent = calculateLongestStreak();
+            openModal('calendarModal');
+        };
+
+        window.changeMonth = function(delta) {
+            calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const year = calendarMonth.getFullYear();
+            const month = calendarMonth.getMonth();
+            
+            document.getElementById('calendarMonth').textContent = calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const grid = document.getElementById('calendarGrid');
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            let html = days.map(d => `<div class="calendar-day header">${d}</div>`).join('');
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="calendar-day empty"></div>';
+            }
+            
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayDate = new Date();
+            const todayYear = todayDate.getFullYear();
+            const todayMonth = todayDate.getMonth();
+            const todayDay = todayDate.getDate();
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayData = history.find(h => h.date === dateStr);
+                const isToday = dateStr === today;
+                // Compare using year, month, day to avoid UTC issues
+                const isFuture = (year > todayYear) || 
+                                (year === todayYear && month > todayMonth) || 
+                                (year === todayYear && month === todayMonth && d > todayDay);
+                
+                let status = 'missed';
+                if (isFuture) status = 'future';
+                else if (dayData) {
+                    if (dayData.protein >= goals.protein) status = 'hit';
+                    else if (dayData.protein >= goals.protein * 0.8) status = 'partial';
+                }
+                
+                html += `<div class="calendar-day ${status} ${isToday ? 'today' : ''}">${d}</div>`;
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        window.openAchievementModal = function(id, isNew = false) {
+            const allBadges = [...achievements.consistency, ...achievements.strength, ...achievements.goals];
+            const badge = allBadges.find(b => b.id === id);
+            if (!badge) return;
+
+            const unlocked = earnedBadges.includes(id);
+            const content = document.getElementById('achievementContent');
+            content.className = 'modal-center achievement-modal' + (unlocked ? '' : ' locked');
+
+            // Calculate progress
+            let progress = 0;
+            let current = 0;
+            if (badge.id.startsWith('streak')) {
+                current = calculateStreak();
+                progress = (current / badge.requirement) * 100;
+            } else if (badge.id.startsWith('pr')) {
+                current = Object.keys(prs).length;
+                progress = (current / badge.requirement) * 100;
+            } else if (badge.id.startsWith('days')) {
+                current = history.filter(h => h.protein > 0).length;
+                progress = (current / badge.requirement) * 100;
+            } else if (badge.id === 'workout25') {
+                current = history.filter(h => h.workout?.completed).length;
+                progress = (current / badge.requirement) * 100;
+            } else if (badge.id === 'protein150') {
+                current = Math.max(...history.map(h => h.protein || 0), 0);
+                progress = (current / badge.requirement) * 100;
+            }
+
+            content.innerHTML = `
+                ${isNew ? '<div style="font-size:1.5rem;margin-bottom:12px;">🎉 New Badge Unlocked!</div>' : ''}
+                <div class="badge-glow">${badge.icon}</div>
+                <h2>${badge.name}</h2>
+                <p class="desc">${badge.desc}</p>
+                ${unlocked ? `<p class="date">Earned!</p>` : `<p class="progress-text">${current} / ${badge.requirement}</p>`}
+                <button class="btn" onclick="closeModal('achievementModal')">${unlocked ? 'Awesome! 💪' : 'Keep Going!'}</button>
+            `;
+
+            openModal('achievementModal');
+        };
+
+        window.openAddMeasurement = function() {
+            openModal('measurementModal');
+        };
+
+        window.saveMeasurement = async function() {
+            const measurement = {
+                date: today,
+                waist: parseFloat(document.getElementById('measureWaist').value) || null,
+                stomach: parseFloat(document.getElementById('measureStomach').value) || null,
+                chest: parseFloat(document.getElementById('measureChest').value) || null,
+                hips: parseFloat(document.getElementById('measureHips').value) || null,
+                thighs: parseFloat(document.getElementById('measureThighs').value) || null,
+            };
+
+            measurements.push(measurement);
+            await setDoc(doc(db, 'users', user.uid, 'data', 'measurements'), { list: measurements });
+            
+            closeModal('measurementModal');
+            renderBody();
+            showToast('✓ Measurements saved!');
+        };
+
+        window.updateRewardText = async function(id, text) {
+            const reward = rewards.find(r => r.id === id);
+            if (reward) {
+                reward.reward = text;
+                await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+            }
+        };
+
+        window.updateRewardLink = async function(id, link) {
+            const reward = rewards.find(r => r.id === id);
+            if (reward) {
+                reward.link = link;
+                await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+                renderRewards();
+            }
+        };
+
+        window.claimReward = async function(id) {
+            const reward = rewards.find(r => r.id === id);
+            if (reward) {
+                reward.claimed = true;
+                await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+                renderRewards();
+                triggerConfetti();
+                showToast('🎉 Reward claimed! Treat yourself!');
+            }
+        };
+
+        window.showHistoryDetail = function() { 
+            showAllHistory();
+        };
+        
+        window.showPRsDetail = function() { 
+            openPRsModal();
+        };
+        
+        window.showWeightDetail = function() { 
+            document.querySelectorAll('.tab')[1].click();
+        };
+        
+        window.openPRsModal = function() {
+            const prEntries = Object.entries(prs);
+            
+            if (prEntries.length === 0) {
+                document.getElementById('prsList').innerHTML = `
+                    <div style="text-align:center; padding:40px; color:var(--text-muted);">
+                        <div style="font-size:3rem; margin-bottom:12px;">🏆</div>
+                        <p>No PRs recorded yet</p>
+                        <p style="font-size:0.85rem;">Complete workouts to set personal records!</p>
+                    </div>
+                `;
+            } else {
+                // Exercise name mapping
+                const exerciseNames = {
+                    'squat': 'Barbell Squat', 'legpress': 'Leg Press', 'rdl': 'Romanian Deadlift',
+                    'lunges': 'Walking Lunges', 'legcurl': 'Leg Curl', 'calfpress': 'Calf Raises',
+                    'deadlift': 'Deadlift', 'hipthrust': 'Hip Thrust', 'bulgsplit': 'Bulgarian Split Squat',
+                    'legcurl2': 'Lying Leg Curl', 'legext': 'Leg Extension', 'calf2': 'Seated Calf Raise',
+                    'bench': 'Bench Press', 'ohp': 'Overhead Press', 'incline': 'Incline DB Press',
+                    'latpd': 'Lat Pulldown', 'laterals': 'Lateral Raises', 'tricep': 'Tricep Pushdowns',
+                    'row': 'Barbell Row', 'pullup': 'Pull-ups', 'cablerow': 'Seated Cable Row',
+                    'facepull': 'Face Pulls', 'bicep': 'Bicep Curls', 'hammer': 'Hammer Curls',
+                    'crunch': 'Crunches', 'plank': 'Plank', 'russiantwist': 'Russian Twists'
+                };
+                
+                document.getElementById('prsList').innerHTML = prEntries.map(([id, pr]) => {
+                    const name = exerciseNames[id] || id;
+                    const dateStr = pr.date ? new Date(pr.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                    return `
+                        <div style="display:flex; align-items:center; padding:16px; background:var(--bg-secondary); border-radius:14px; margin-bottom:10px;">
+                            <div style="width:50px; height:50px; background:linear-gradient(135deg, #ffd700, #ffb347); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-right:14px;">🏆</div>
+                            <div style="flex:1;">
+                                <div style="font-size:0.95rem; font-weight:600;">${name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">${dateStr}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${pr.weight} lbs</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            openModal('prsModal');
+        };
+        
+        let selectedDayDate = null;
+        
+        window.showAllHistory = function() {
+            // Deduplicate by date
+            const uniqueHistory = [];
+            const seenDates = new Set();
+            for (const day of history) {
+                if (!seenDates.has(day.date)) {
+                    seenDates.add(day.date);
+                    uniqueHistory.push(day);
+                }
+            }
+            
+            document.getElementById('fullHistoryList').innerHTML = uniqueHistory.map(day => {
+                // Parse date as local time by adding T12:00:00 to avoid timezone issues
+                const date = new Date(day.date + 'T12:00:00');
+                const hitGoal = day.protein >= goals.protein;
+                return `
+                    <div class="history-item" onclick="openDayDetail('${day.date}')">
+                        <div class="date">
+                            <div class="day">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                            <div class="full">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        </div>
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="value">${day.protein || 0}g</div>
+                                <div class="label">Protein</div>
+                            </div>
+                            <div class="stat">
+                                <div class="value">${day.calories || 0}</div>
+                                <div class="label">Calories</div>
+                            </div>
+                        </div>
+                        <div class="status">${hitGoal ? '✅' : '○'}</div>
+                    </div>
+                `;
+            }).join('') || '<div style="padding:20px;text-align:center;color:var(--text-muted);">No history yet</div>';
+            
+            openModal('historyModal');
+        };
+        
+        window.clearAllHistory = async function() {
+            if (!confirm('Delete ALL history? This will remove all logged days. This cannot be undone.')) return;
+            
+            // Delete all day documents
+            for (const day of history) {
+                await deleteDoc(doc(db, 'users', user.uid, 'days', day.date));
+            }
+            
+            history = [];
+            render();
+            showToast('History cleared');
+        };
+        
+        window.openDayDetail = function(dateStr) {
+            selectedDayDate = dateStr;
+            const day = history.find(h => h.date === dateStr);
+            if (!day) return;
+            
+            const date = new Date(dateStr);
+            document.getElementById('dayDetailTitle').textContent = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('dayProtein').textContent = (day.protein || 0) + 'g';
+            document.getElementById('dayCalories').textContent = day.calories || 0;
+            
+            // Foods list
+            if (day.foods && day.foods.length > 0) {
+                document.getElementById('dayFoodsList').innerHTML = day.foods.map(f => `
+                    <div style="padding:10px 12px; background:var(--bg-secondary); border-radius:10px; margin-bottom:8px; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.2rem;">${f.emoji || '🍽️'}</span>
+                        <div style="flex:1;">
+                            <div style="font-size:0.9rem; font-weight:500;">${f.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${f.protein}g protein • ${f.calories} cal</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('dayFoodsList').innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No foods logged</div>';
+            }
+            
+            // Workout
+            if (day.workout && day.workout.completed) {
+                document.getElementById('dayWorkoutSection').style.display = 'block';
+                document.getElementById('dayWorkout').innerHTML = `
+                    <div style="font-weight:600;">${day.workout.name}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${day.workout.exercises || 0} exercises • ${day.workout.duration || 0} min</div>
+                `;
+            } else {
+                document.getElementById('dayWorkoutSection').style.display = 'none';
+            }
+            
+            closeModal('historyModal');
+            openModal('dayDetailModal');
+        };
+        
+        window.deleteDay = async function() {
+            if (!selectedDayDate) return;
+            
+            if (!confirm('Are you sure you want to delete this day? This cannot be undone.')) return;
+            
+            await deleteDoc(doc(db, 'users', user.uid, 'days', selectedDayDate));
+            
+            // Remove from local history
+            history = history.filter(h => h.date !== selectedDayDate);
+            
+            closeModal('dayDetailModal');
+            render();
+            showToast('Day deleted');
+        };
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const colors = ['#7d8471', '#c4846c', '#ffd700', '#ff6b6b', '#4ecdc4'];
+            
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 10
+                });
+            }
+            
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += 3;
+                    p.tilt += 0.1;
+                    ctx.beginPath();
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x + p.tilt, p.y, p.r, p.r);
+                });
+                frame++;
+                if (frame < 120) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme');
+            if (theme) document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('show');
+            document.body.style.overflow = '';
+        };
+
+        document.querySelectorAll('.modal-overlay, .modal-bottom').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) closeModal(m.id);
+            });
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>

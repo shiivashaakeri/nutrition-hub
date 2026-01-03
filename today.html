@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Today | Nutrition Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7d8471">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf9f7; --bg-card: #ffffff; --bg-secondary: #f3f1ee;
+            --text: #1a1a1a; --text-secondary: #6b6b6b; --text-muted: #999;
+            --accent: #7d8471; --accent-light: rgba(125,132,113,0.12);
+            --warm: #c4846c; --warm-light: rgba(196,132,108,0.12);
+            --border: rgba(0,0,0,0.06); --shadow: 0 2px 8px rgba(0,0,0,0.04);
+            --nav-height: 70px; --success: #4caf50; --error: #e53935;
+        }
+        [data-theme="dark"] {
+            --bg: #111110; --bg-card: #1c1c1a; --bg-secondary: #242422;
+            --text: #f5f5f4; --text-secondary: #a3a3a3; --text-muted: #666;
+            --border: rgba(255,255,255,0.08); --shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-height) + 20px); }
+        
+        /* Loading */
+        .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .loading-screen.hide { display: none; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-secondary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Header */
+        .header { padding: 20px 20px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .header-left h1 { font-size: 1.5rem; font-weight: 700; }
+        .header-left p { font-size: 0.85rem; color: var(--text-secondary); }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .sync-indicator { font-size: 0.7rem; color: var(--text-muted); }
+        .sync-indicator.synced { color: var(--accent); }
+        .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+        .avatar:hover { border-color: var(--accent); }
+        
+        /* Streak Banner */
+        .streak-banner { margin: 0 20px 16px; padding: 16px 20px; background: linear-gradient(135deg, #ff9500, #ff5e3a); border-radius: 16px; color: white; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s; }
+        .streak-banner:active { transform: scale(0.98); }
+        .streak-info { display: flex; align-items: center; gap: 12px; }
+        .streak-info .fire { font-size: 1.8rem; }
+        .streak-info .text h3 { font-size: 1.1rem; font-weight: 700; }
+        .streak-info .text p { font-size: 0.8rem; opacity: 0.9; }
+        .streak-arrow { font-size: 1.2rem; opacity: 0.8; }
+        
+        /* Main Content */
+        .content { padding: 0 20px; }
+        
+        /* Progress Rings Section */
+        .progress-section { background: var(--bg-card); border-radius: 20px; padding: 24px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .progress-rings { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .ring-item { text-align: center; cursor: pointer; transition: transform 0.15s; }
+        .ring-item:active { transform: scale(0.95); }
+        .ring-container { position: relative; width: 90px; height: 90px; }
+        .ring-container svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: var(--bg-secondary); stroke-width: 8; }
+        .ring-progress { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s; }
+        .ring-progress.protein { stroke: var(--accent); }
+        .ring-progress.calories { stroke: var(--warm); }
+        .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .ring-value { font-size: 1.1rem; font-weight: 700; }
+        .ring-label { font-size: 0.65rem; color: var(--text-muted); }
+        .ring-title { font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
+        .ring-subtitle { font-size: 0.7rem; color: var(--text-muted); }
+        
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 10px; }
+        .quick-btn { flex: 1; padding: 14px 12px; background: var(--bg-secondary); border: none; border-radius: 12px; font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text); transition: all 0.15s; }
+        .quick-btn:hover { background: var(--accent-light); color: var(--accent); }
+        
+        /* Water Tracker */
+        .water-section { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .section-badge { font-size: 0.75rem; padding: 4px 10px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-weight: 600; }
+        .water-glasses { display: flex; gap: 8px; flex-wrap: wrap; }
+        .water-glass { width: 36px; height: 36px; border-radius: 10px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem; transition: all 0.15s; border: 2px solid transparent; }
+        .water-glass.filled { background: rgba(66, 165, 245, 0.15); border-color: #42a5f5; }
+        .water-glass:hover { transform: scale(1.1); }
+        
+        /* Today's Workout */
+        .workout-section { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .workout-selector { position: relative; margin-bottom: 16px; }
+        .workout-dropdown { width: 100%; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+        .workout-dropdown:hover { border-color: var(--accent); }
+        .workout-dropdown .arrow { transition: transform 0.2s; }
+        .workout-dropdown.open .arrow { transform: rotate(180deg); }
+        .workout-options { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; display: none; overflow: hidden; }
+        .workout-options.show { display: block; }
+        .workout-option { padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.1s; }
+        .workout-option:hover { background: var(--bg-secondary); }
+        .workout-option.selected { background: var(--accent-light); }
+        .workout-option .icon { font-size: 1.2rem; }
+        .workout-option .info h4 { font-size: 0.9rem; font-weight: 600; }
+        .workout-option .info p { font-size: 0.75rem; color: var(--text-muted); }
+        .workout-preview { padding: 16px; background: var(--bg-secondary); border-radius: 14px; }
+        .workout-preview h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
+        .workout-preview p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
+        .start-workout-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+        .start-workout-btn:hover { opacity: 0.9; }
+        .rest-day-btn { width: 100%; padding: 14px; background: transparent; border: 2px dashed var(--border); border-radius: 12px; font-family: inherit; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin-top: 12px; transition: all 0.15s; }
+        .rest-day-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .workout-done { text-align: center; padding: 20px; }
+        .workout-done .icon { font-size: 3rem; margin-bottom: 12px; }
+        .workout-done h4 { font-size: 1rem; font-weight: 600; color: var(--accent); }
+        .workout-done p { font-size: 0.85rem; color: var(--text-secondary); }
+        
+        /* Food Log */
+        .food-section { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .food-list { margin-bottom: 16px; }
+        .food-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); gap: 14px; cursor: pointer; transition: background 0.1s; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+        .food-item:last-child { border-bottom: none; }
+        .food-item:active { background: var(--bg-secondary); }
+        .food-item .emoji { font-size: 1.5rem; width: 44px; height: 44px; background: var(--bg-secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .food-item .details { flex: 1; }
+        .food-item .details h4 { font-size: 0.9rem; font-weight: 600; }
+        .food-item .details p { font-size: 0.75rem; color: var(--text-muted); }
+        .food-item .macros { text-align: right; }
+        .food-item .macros .protein { font-size: 0.9rem; font-weight: 600; color: var(--accent); }
+        .food-item .macros .calories { font-size: 0.75rem; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 32px 20px; }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state h4 { font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+        .empty-state p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+        .empty-state .btn { display: inline-flex; padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; gap: 6px; }
+        .add-food-btn { width: 100%; padding: 14px; background: var(--bg-secondary); border: none; border-radius: 12px; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--accent); transition: all 0.15s; }
+        .add-food-btn:hover { background: var(--accent-light); }
+        
+        /* Planned Meals */
+        .planned-section { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .planned-meal { display: flex; align-items: center; padding: 14px; background: var(--bg-secondary); border-radius: 14px; margin-bottom: 10px; gap: 14px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+        .planned-meal:hover { border-color: var(--accent); }
+        .planned-meal:last-child { margin-bottom: 0; }
+        .planned-meal.logged { opacity: 0.6; border: 2px dashed var(--border); }
+        .planned-meal .time { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; min-width: 60px; }
+        .planned-meal .emoji { font-size: 1.3rem; }
+        .planned-meal .info { flex: 1; }
+        .planned-meal .info h4 { font-size: 0.85rem; font-weight: 600; }
+        .planned-meal .info p { font-size: 0.7rem; color: var(--text-muted); }
+        .planned-meal .action { padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+        .planned-meal.logged .action { background: var(--bg-card); color: var(--text-muted); }
+        
+        /* Cycle Phase Card */
+        .cycle-section { background: linear-gradient(135deg, var(--warm-light), var(--accent-light)); border-radius: 20px; padding: 20px; margin-bottom: 16px; cursor: pointer; transition: transform 0.15s; }
+        .cycle-section:active { transform: scale(0.98); }
+        .cycle-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .cycle-header .icon { font-size: 1.5rem; }
+        .cycle-header h3 { font-size: 1rem; font-weight: 600; }
+        .cycle-header .day { margin-left: auto; font-size: 0.85rem; font-weight: 600; color: var(--warm); }
+        .cycle-phase { font-size: 0.9rem; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+        .cycle-tip { font-size: 0.8rem; color: var(--text-secondary); }
+        
+        /* Supplements */
+        .supplements-section { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .supplement-row { display: flex; gap: 12px; }
+        .supplement-card { flex: 1; padding: 16px; background: var(--bg-secondary); border-radius: 14px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+        .supplement-card:hover { border-color: var(--accent); }
+        .supplement-card.taken { background: var(--accent-light); border-color: var(--accent); }
+        .supplement-card .icon { font-size: 1.5rem; margin-bottom: 6px; }
+        .supplement-card .label { font-size: 0.8rem; font-weight: 600; }
+        .supplement-card .status { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+        .supplement-card.taken .status { color: var(--accent); }
+        
+        /* Protein Shake Suggestion */
+        .shake-suggestion { background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.2)); border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+        .shake-suggestion .icon { font-size: 2rem; }
+        .shake-suggestion .text { flex: 1; }
+        .shake-suggestion .text h4 { font-size: 0.9rem; font-weight: 600; }
+        .shake-suggestion .text p { font-size: 0.8rem; color: var(--text-secondary); }
+        .shake-suggestion .btn { padding: 10px 16px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        
+        /* Weight Card */
+        .weight-card { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.15s; }
+        .weight-card:active { transform: scale(0.98); }
+        .weight-card .icon { font-size: 2rem; width: 56px; height: 56px; background: var(--bg-secondary); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+        .weight-card .info { flex: 1; }
+        .weight-card .info h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+        .weight-card .info .value { font-size: 1.5rem; font-weight: 700; }
+        .weight-card .info .change { font-size: 0.8rem; color: var(--accent); }
+        .weight-card .arrow { color: var(--text-muted); }
+        .weight-reminder { background: var(--warm-light); border-radius: 14px; padding: 4px 10px; font-size: 0.7rem; font-weight: 600; color: var(--warm); }
+        
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; transition: color 0.15s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 1.4rem; }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 14px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; z-index: 300; opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast .undo { color: var(--warm); font-weight: 600; cursor: pointer; margin-left: 8px; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--bg-card); border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+        .modal-overlay.show .modal { transform: translateY(0); }
+        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+        .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Food Modal */
+        .food-modal-item { display: flex; align-items: center; padding: 16px; background: var(--bg-secondary); border-radius: 14px; margin-bottom: 12px; gap: 14px; cursor: pointer; transition: all 0.15s; }
+        .food-modal-item:hover { background: var(--accent-light); }
+        .food-modal-item .emoji { font-size: 1.5rem; }
+        .food-modal-item .info { flex: 1; }
+        .food-modal-item .info h4 { font-size: 0.9rem; font-weight: 600; }
+        .food-modal-item .info p { font-size: 0.75rem; color: var(--text-muted); }
+        .food-search { width: 100%; padding: 14px 16px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 12px; font-size: 0.95rem; margin-bottom: 16px; font-family: inherit; color: var(--text); }
+        .food-search:focus { outline: none; border-color: var(--accent); }
+        .food-category { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin: 16px 0 10px; }
+        
+        /* Edit Food Modal */
+        .portion-control { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 24px 0; }
+        .portion-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg-card); font-size: 1.5rem; cursor: pointer; }
+        .portion-value { text-align: center; }
+        .portion-value .num { font-size: 2.5rem; font-weight: 700; }
+        .portion-value .unit { font-size: 0.9rem; color: var(--text-muted); }
+        .macro-preview { display: flex; justify-content: space-around; padding: 16px; background: var(--bg-secondary); border-radius: 14px; margin-bottom: 20px; }
+        .macro-preview .item { text-align: center; }
+        .macro-preview .item .value { font-size: 1.2rem; font-weight: 700; }
+        .macro-preview .item .label { font-size: 0.7rem; color: var(--text-muted); }
+        .modal-actions { display: flex; gap: 12px; }
+        .modal-actions .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+        .btn-delete { background: rgba(229,57,53,0.1); color: var(--error); }
+        .btn-save { background: var(--accent); color: white; }
+        
+        /* Streak Calendar Modal */
+        .streak-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 16px; }
+        .streak-day { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 500; }
+        .streak-day.header { font-weight: 600; color: var(--text-muted); font-size: 0.7rem; }
+        .streak-day.empty { background: transparent; }
+        .streak-day.missed { background: var(--bg-secondary); color: var(--text-muted); }
+        .streak-day.hit { background: var(--accent); color: white; }
+        .streak-day.partial { background: var(--accent-light); color: var(--accent); }
+        .streak-day.today { border: 2px solid var(--accent); }
+        .streak-stats { display: flex; justify-content: space-around; padding: 20px; background: var(--bg-secondary); border-radius: 14px; margin-top: 20px; }
+        .streak-stat { text-align: center; }
+        .streak-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .streak-stat .label { font-size: 0.75rem; color: var(--text-muted); }
+        
+        /* Ring Detail Modal */
+        .ring-detail { text-align: center; margin: 24px 0; }
+        .ring-detail .big-value { font-size: 3rem; font-weight: 700; color: var(--accent); }
+        .ring-detail .goal { font-size: 1rem; color: var(--text-secondary); }
+        .ring-detail .remaining { font-size: 0.9rem; color: var(--text-muted); margin-top: 8px; }
+        .ring-breakdown { background: var(--bg-secondary); border-radius: 14px; padding: 16px; }
+        .ring-breakdown h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; }
+        .breakdown-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .breakdown-item:last-child { border-bottom: none; }
+        .suggestions-list { margin-top: 20px; }
+        .suggestion-item { display: flex; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 12px; margin-bottom: 8px; gap: 12px; cursor: pointer; }
+        .suggestion-item:hover { background: var(--accent-light); }
+        .suggestion-item .emoji { font-size: 1.3rem; }
+        .suggestion-item .text { flex: 1; font-size: 0.85rem; }
+        .suggestion-item .add { color: var(--accent); font-weight: 600; }
+        /* Input Group */
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; background: var(--bg-secondary); color: var(--text); font-family: inherit; }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen"><div class="spinner"></div></div>
+    <div class="toast" id="toast"></div>
+    
+    <header class="header">
+        <div class="header-left">
+            <h1 id="greeting">Good morning! 👋</h1>
+            <p id="dateText">Loading...</p>
+        </div>
+        <div class="header-right">
+            <span class="sync-indicator synced" id="syncStatus">● Synced</span>
+            <div class="avatar" onclick="openAvatarPicker()" id="avatarBtn">👤</div>
+        </div>
+    </header>
+    
+    <div class="streak-banner" onclick="openStreakModal()" id="streakBanner">
+        <div class="streak-info">
+            <span class="fire">🔥</span>
+            <div class="text">
+                <h3><span id="streakCount">0</span> Day Streak!</h3>
+                <p>Tap to see your calendar</p>
+            </div>
+        </div>
+        <span class="streak-arrow">→</span>
+    </div>
+    
+    <div class="content">
+        <!-- Protein Shake Suggestion (conditional) -->
+        <div class="shake-suggestion" id="shakeSuggestion" style="display:none;">
+            <span class="icon">🥤</span>
+            <div class="text">
+                <h4>Need more protein?</h4>
+                <p id="shakeText">A shake would help you hit your goal!</p>
+            </div>
+            <button class="btn" onclick="logProteinShake()">+ Log Shake</button>
+        </div>
+        
+        <!-- Progress Rings -->
+        <div class="progress-section">
+            <div class="progress-rings">
+                <div class="ring-item" onclick="openRingDetail('protein')">
+                    <div class="ring-container">
+                        <svg width="90" height="90"><circle class="ring-bg" cx="45" cy="45" r="38"/><circle class="ring-progress protein" cx="45" cy="45" r="38" stroke-dasharray="239" stroke-dashoffset="239" id="proteinRing"/></svg>
+                        <div class="ring-center"><span class="ring-value" id="proteinValue">0g</span><span class="ring-label">protein</span></div>
+                    </div>
+                    <div class="ring-title">Protein</div>
+                    <div class="ring-subtitle" id="proteinGoalText">/ 125g</div>
+                </div>
+                <div class="ring-item" onclick="openRingDetail('calories')">
+                    <div class="ring-container">
+                        <svg width="90" height="90"><circle class="ring-bg" cx="45" cy="45" r="38"/><circle class="ring-progress calories" cx="45" cy="45" r="38" stroke-dasharray="239" stroke-dashoffset="239" id="caloriesRing"/></svg>
+                        <div class="ring-center"><span class="ring-value" id="caloriesValue">0</span><span class="ring-label">cal</span></div>
+                    </div>
+                    <div class="ring-title">Calories</div>
+                    <div class="ring-subtitle" id="caloriesGoalText">/ 1550</div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="openAddFoodModal()">➕ Add Food</button>
+                <button class="quick-btn" onclick="copyYesterday()">📋 Copy Yesterday</button>
+            </div>
+        </div>
+        
+        <!-- Water -->
+        <div class="water-section">
+            <div class="section-header">
+                <span class="section-title">💧 Water</span>
+                <span class="section-badge" id="waterBadge">0/8</span>
+            </div>
+            <div class="water-glasses" id="waterGlasses"></div>
+        </div>
+        
+        <!-- Today's Workout -->
+        <div class="workout-section">
+            <div class="section-header">
+                <span class="section-title">🏋️ Today's Workout</span>
+            </div>
+            <div id="workoutContent">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+        
+        <!-- Planned Meals -->
+        <div class="planned-section" id="plannedSection" style="display:none;">
+            <div class="section-header">
+                <span class="section-title">📅 Planned Meals</span>
+            </div>
+            <div id="plannedMeals"></div>
+        </div>
+        
+        <!-- Cycle Phase (conditional) -->
+        <div class="cycle-section" id="cycleSection" style="display:none;" onclick="openCycleModal()">
+            <div class="cycle-header">
+                <span class="icon">🌸</span>
+                <h3>Cycle Tracking</h3>
+                <span class="day" id="cycleDay">Day 1</span>
+            </div>
+            <div class="cycle-phase" id="cyclePhase">Menstrual Phase</div>
+            <div class="cycle-tip" id="cycleTip">Consider lighter workouts today</div>
+        </div>
+        
+        <!-- Supplements -->
+        <div class="supplements-section">
+            <div class="section-header">
+                <span class="section-title">💊 Supplements</span>
+                <span style="font-size:0.8rem; color:var(--accent); cursor:pointer;" onclick="openSupplementsSettings()">Edit ✏️</span>
+            </div>
+            <div class="supplement-row">
+                <div class="supplement-card" id="suppMorning" onclick="toggleSupplement('morning')">
+                    <div class="icon">🌅</div>
+                    <div class="label">Morning</div>
+                    <div class="pills" id="morningPills" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;"></div>
+                    <div class="status">Not taken</div>
+                </div>
+                <div class="supplement-card" id="suppEvening" onclick="toggleSupplement('evening')">
+                    <div class="icon">🌙</div>
+                    <div class="label">Evening</div>
+                    <div class="pills" id="eveningPills" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;"></div>
+                    <div class="status">Not taken</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weight Card -->
+        <div class="weight-card" onclick="openWeightModal()" id="weightCard">
+            <div class="icon">⚖️</div>
+            <div class="info">
+                <h4>Current Weight</h4>
+                <div class="value" id="weightValue">--</div>
+                <div class="change" id="weightChange"></div>
+            </div>
+            <div id="weightReminder"></div>
+            <span class="arrow">→</span>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="today.html" class="nav-item active"><span class="nav-icon">📊</span><span>Today</span></a>
+        <a href="gym.html" class="nav-item"><span class="nav-icon">🏋️</span><span>Gym</span></a>
+        <a href="food.html" class="nav-item"><span class="nav-icon">🍽️</span><span>Food</span></a>
+        <a href="progress.html" class="nav-item"><span class="nav-icon">📈</span><span>Progress</span></a>
+    </nav>
+    
+    <!-- MODALS -->
+    
+    <!-- Add Food Modal -->
+    <div class="modal-overlay" id="addFoodModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>Add Food</h3>
+                <button class="modal-close" onclick="closeModal('addFoodModal')">✕</button>
+            </div>
+            <input type="text" class="food-search" placeholder="🔍 Search foods..." id="foodSearch" oninput="filterFoods()">
+            <div id="foodModalContent"></div>
+        </div>
+    </div>
+    
+    <!-- Edit Food Modal -->
+    <div class="modal-overlay" id="editFoodModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 id="editFoodName">Edit Food</h3>
+                <button class="modal-close" onclick="closeModal('editFoodModal')">✕</button>
+            </div>
+            <div class="portion-control">
+                <button class="portion-btn" onclick="adjustPortion(-0.25)">−</button>
+                <div class="portion-value">
+                    <div class="num" id="portionValue">1</div>
+                    <div class="unit">serving</div>
+                </div>
+                <button class="portion-btn" onclick="adjustPortion(0.25)">+</button>
+            </div>
+            <div class="macro-preview">
+                <div class="item"><div class="value" id="editProtein">0g</div><div class="label">Protein</div></div>
+                <div class="item"><div class="value" id="editCalories">0</div><div class="label">Calories</div></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-delete" onclick="deleteFood()">🗑️ Delete</button>
+                <button class="btn btn-save" onclick="saveFood()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Streak Calendar Modal -->
+    <div class="modal-overlay" id="streakModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🔥 Your Streak</h3>
+                <button class="modal-close" onclick="closeModal('streakModal')">✕</button>
+            </div>
+            <div class="streak-calendar" id="streakCalendar"></div>
+            <div class="streak-stats">
+                <div class="streak-stat"><div class="value" id="currentStreak">0</div><div class="label">Current Streak</div></div>
+                <div class="streak-stat"><div class="value" id="longestStreak">0</div><div class="label">Longest Streak</div></div>
+                <div class="streak-stat"><div class="value" id="totalDays">0</div><div class="label">Total Days</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ring Detail Modal -->
+    <div class="modal-overlay" id="ringDetailModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 id="ringDetailTitle">Protein</h3>
+                <button class="modal-close" onclick="closeModal('ringDetailModal')">✕</button>
+            </div>
+            <div class="ring-detail">
+                <div class="big-value" id="ringDetailValue">89g</div>
+                <div class="goal" id="ringDetailGoal">of 125g goal</div>
+                <div class="remaining" id="ringDetailRemaining">36g remaining</div>
+            </div>
+            <div class="ring-breakdown">
+                <h4 style="display:flex; justify-content:space-between; align-items:center;">
+                    Today's Foods
+                    <span style="font-size:0.75rem; color:var(--accent); cursor:pointer;" onclick="closeModal('ringDetailModal'); openAddFoodModal();">+ Add</span>
+                </h4>
+                <div id="ringBreakdown"></div>
+            </div>
+            <div class="suggestions-list" id="ringSuggestions"></div>
+        </div>
+    </div>
+    
+    <!-- Weight Modal -->
+    <div class="modal-overlay" id="weightModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>⚖️ Log Weight</h3>
+                <button class="modal-close" onclick="closeModal('weightModal')">✕</button>
+            </div>
+            <div class="portion-control">
+                <button class="portion-btn" onclick="adjustWeight(-0.1)">−</button>
+                <div class="portion-value">
+                    <div class="num" id="weightInputValue">65.0</div>
+                    <div class="unit">kg</div>
+                </div>
+                <button class="portion-btn" onclick="adjustWeight(0.1)">+</button>
+            </div>
+            <button class="btn btn-save" style="width:100%; margin-top: 20px;" onclick="saveWeight()">Save Weight</button>
+        </div>
+    </div>
+    
+    <!-- Custom Food Entry Modal -->
+    <div class="modal-overlay" id="customFoodModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>✏️ Custom Food</h3>
+                <button class="modal-close" onclick="closeModal('customFoodModal')">✕</button>
+            </div>
+            <div style="padding: 0 24px 24px;">
+                <div class="input-group">
+                    <label>Food Name</label>
+                    <input type="text" id="customFoodName" placeholder="e.g., Grilled chicken salad">
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <div class="input-group" style="flex:1;">
+                        <label>Protein (g)</label>
+                        <input type="number" id="customFoodProtein" placeholder="0">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>Calories</label>
+                        <input type="number" id="customFoodCalories" placeholder="0">
+                    </div>
+                </div>
+                <button class="btn btn-save" style="width:100%; margin-top:8px;" onclick="saveCustomFood()">Add Food</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cycle Details Modal -->
+    <div class="modal-overlay" id="cycleDetailModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🌸 Cycle Details</h3>
+                <button class="modal-close" onclick="closeModal('cycleDetailModal')">✕</button>
+            </div>
+            <div style="padding: 0 24px 24px;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <div style="font-size:3rem; margin-bottom:8px;" id="cycleDetailIcon">🌸</div>
+                    <div style="font-size:1.5rem; font-weight:700;" id="cycleDetailDay">Day 1</div>
+                    <div style="font-size:1rem; color:var(--accent); font-weight:600;" id="cycleDetailPhase">Menstrual Phase</div>
+                </div>
+                <div style="background:var(--bg-secondary); border-radius:14px; padding:16px; margin-bottom:16px;">
+                    <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">💡 Tips for this phase:</h4>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;" id="cycleDetailTips"></p>
+                </div>
+                <div style="background:var(--bg-secondary); border-radius:14px; padding:16px; margin-bottom:16px;">
+                    <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">🏋️ Workout suggestion:</h4>
+                    <p style="font-size:0.85rem; color:var(--text-secondary);" id="cycleDetailWorkout"></p>
+                </div>
+                <div style="background:var(--bg-secondary); border-radius:14px; padding:16px;">
+                    <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">🍽️ Nutrition focus:</h4>
+                    <p style="font-size:0.85rem; color:var(--text-secondary);" id="cycleDetailNutrition"></p>
+                </div>
+                <div style="margin-top:20px;">
+                    <div class="input-group">
+                        <label>Update Last Period Start Date</label>
+                        <input type="date" id="cycleUpdateDate">
+                    </div>
+                    <button class="btn btn-save" style="width:100%;" onclick="updateCycleDate()">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supplements Settings Modal -->
+    <div class="modal-overlay" id="supplementsModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>💊 My Supplements</h3>
+                <button class="modal-close" onclick="closeModal('supplementsModal')">✕</button>
+            </div>
+            <div style="padding: 0 24px 24px;">
+                <div class="input-group">
+                    <label>🌅 Morning Supplements</label>
+                    <input type="text" id="morningSupplements" placeholder="e.g., Vitamin D, Omega-3, Iron">
+                </div>
+                <div class="input-group">
+                    <label>🌙 Evening Supplements</label>
+                    <input type="text" id="eveningSupplements" placeholder="e.g., Magnesium, Zinc">
+                </div>
+                <button class="btn btn-save" style="width:100%; margin-top:8px;" onclick="saveSupplementSettings()">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Avatar Picker Modal -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>Choose Your Avatar</h3>
+                <button class="modal-close" onclick="closeModal('avatarModal')">✕</button>
+            </div>
+            <div style="padding: 0 24px 24px;">
+                <div id="avatarGrid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px;"></div>
+                <button onclick="openProfile(); closeModal('avatarModal');" style="width:100%; padding:14px; background:var(--bg-secondary); border:none; border-radius:12px; font-size:0.9rem; cursor:pointer; color:var(--text);">
+                    ⚙️ Go to Profile Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3FOyamcpwss0nWLFyFeSIHEn29Ew8kcU",
+            authDomain: "nutrition-hub-e010a.firebaseapp.com",
+            projectId: "nutrition-hub-e010a",
+            storageBucket: "nutrition-hub-e010a.firebasestorage.app",
+            messagingSenderId: "48854042250",
+            appId: "1:48854042250:web:b71cc4a22dadb6258c8f73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null;
+        let userData = null;
+        let todayData = { date: '', protein: 0, calories: 0, water: 0, foods: [], supplements: { morning: false, evening: false }, workout: null };
+        let goals = { protein: 125, calories: 1550, water: 8 };
+        let weightData = [];
+        let mealPlan = {};
+        let recentFoods = [];
+        let recipes = [];
+        let history = [];
+        let editingFoodIndex = -1;
+        let editingPortion = 1;
+        let currentWeightInput = 65;
+        let supplementSettings = { morning: 'Vitamin D, Omega-3', evening: 'Magnesium' };
+
+        const todayDate = new Date();
+        const today = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + String(todayDate.getDate()).padStart(2, '0');
+
+        // Default foods for quick add
+        const defaultFoods = [
+            { name: 'Protein Shake', protein: 24, calories: 120, emoji: '🥤' },
+            { name: 'Mush Overnight Oats', protein: 15, calories: 300, emoji: '🥣' },
+            { name: 'Greek Yogurt', protein: 15, calories: 150, emoji: '🥛' },
+            { name: 'Chicken Breast', protein: 31, calories: 165, emoji: '🍗' },
+            { name: 'Eggs (2)', protein: 12, calories: 140, emoji: '🥚' },
+            { name: 'Salmon', protein: 25, calories: 208, emoji: '🐟' },
+            { name: 'Rice & Chicken', protein: 35, calories: 450, emoji: '🍚' },
+            { name: 'Protein Bar', protein: 20, calories: 200, emoji: '🍫' },
+            { name: 'Cottage Cheese', protein: 14, calories: 110, emoji: '🧀' },
+        ];
+
+        const workouts = [
+            { id: 'lowerA', name: 'Lower Body A', desc: 'Quad & Glute Focus', icon: '🦵', exercises: 6 },
+            { id: 'upperA', name: 'Upper Body A', desc: 'Push Focus', icon: '💪', exercises: 6 },
+            { id: 'lowerB', name: 'Lower Body B', desc: 'Hamstring & Glute', icon: '🦵', exercises: 6 },
+            { id: 'upperB', name: 'Upper Body B', desc: 'Pull Focus', icon: '💪', exercises: 6 },
+            { id: 'rest', name: 'Rest Day', desc: 'Recovery & Stretching', icon: '🧘', exercises: 0 },
+        ];
+
+        onAuthStateChanged(auth, async (u) => {
+            if (!u) { window.location.href = 'auth.html'; return; }
+            user = u;
+            await loadAllData();
+            setupRealtimeSync();
+            hideLoading();
+            renderAll();
+        });
+
+        async function loadAllData() {
+            // User data
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                userData = userDoc.data();
+                goals = userData.goals || goals;
+            }
+
+            // Today's data
+            const todayDoc = await getDoc(doc(db, 'users', user.uid, 'days', today));
+            if (todayDoc.exists()) {
+                todayData = { ...todayData, ...todayDoc.data() };
+            }
+            todayData.date = today;
+
+            // Weight
+            const weightDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'weight'));
+            weightData = weightDoc.exists() ? weightDoc.data().list || [] : [];
+
+            // Meal Plan
+            const mealPlanDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'mealPlan'));
+            mealPlan = mealPlanDoc.exists() ? mealPlanDoc.data() : {};
+
+            // Recent Foods
+            const recentDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'recentFoods'));
+            recentFoods = recentDoc.exists() ? recentDoc.data().list || [] : [];
+
+            // Recipes
+            const recipesDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'recipes'));
+            recipes = recipesDoc.exists() ? recipesDoc.data().list || [] : [];
+
+            // Supplement Settings
+            const suppDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'supplementSettings'));
+            if (suppDoc.exists()) {
+                supplementSettings = suppDoc.data();
+            }
+
+            // History (for streak)
+            const daysSnap = await getDocs(collection(db, 'users', user.uid, 'days'));
+            history = [];
+            daysSnap.forEach(doc => history.push(doc.data()));
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        function setupRealtimeSync() {
+            onSnapshot(doc(db, 'users', user.uid, 'days', today), (doc) => {
+                if (doc.exists()) {
+                    todayData = { ...todayData, ...doc.data() };
+                    renderAll();
+                }
+                setSyncStatus('synced');
+            });
+        }
+
+        function setSyncStatus(status) {
+            const el = document.getElementById('syncStatus');
+            el.textContent = status === 'syncing' ? '◌ Syncing...' : '● Synced';
+            el.className = 'sync-indicator' + (status === 'synced' ? ' synced' : '');
+        }
+
+        async function saveToday() {
+            setSyncStatus('syncing');
+            await setDoc(doc(db, 'users', user.uid, 'days', today), todayData);
+            setSyncStatus('synced');
+        }
+
+        function hideLoading() { document.getElementById('loadingScreen').classList.add('hide'); }
+
+        function renderAll() {
+            renderHeader();
+            renderStreak();
+            renderRings();
+            renderWater();
+            renderWorkout();
+            renderPlannedMeals();
+            renderFoodList();
+            renderCycle();
+            renderSupplements();
+            renderWeight();
+            checkShakeSuggestion();
+            applyTheme();
+            
+            // Set avatar
+            if (userData?.avatar) {
+                document.getElementById('avatarBtn').textContent = userData.avatar;
+            }
+        }
+
+        function renderHeader() {
+            const hour = new Date().getHours();
+            let greeting = 'Good morning! 👋';
+            if (hour >= 12 && hour < 17) greeting = 'Good afternoon! ☀️';
+            else if (hour >= 17) greeting = 'Good evening! 🌙';
+            document.getElementById('greeting').textContent = greeting;
+            
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('dateText').textContent = new Date().toLocaleDateString('en-US', options);
+            
+            // Show saved avatar
+            document.getElementById('avatarBtn').textContent = userData?.avatar || '👤';
+        }
+
+        function renderStreak() {
+            let streak = 0;
+            const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            for (const day of sortedHistory) {
+                if (day.protein >= goals.protein * 0.9) streak++;
+                else break;
+            }
+            document.getElementById('streakCount').textContent = streak;
+        }
+
+        function renderRings() {
+            const proteinPct = Math.min(100, (todayData.protein / goals.protein) * 100);
+            const caloriesPct = Math.min(100, (todayData.calories / goals.calories) * 100);
+            const circumference = 239;
+            
+            document.getElementById('proteinRing').style.strokeDashoffset = circumference - (circumference * proteinPct / 100);
+            document.getElementById('caloriesRing').style.strokeDashoffset = circumference - (circumference * caloriesPct / 100);
+            
+            document.getElementById('proteinValue').textContent = todayData.protein + 'g';
+            document.getElementById('caloriesValue').textContent = todayData.calories;
+            document.getElementById('proteinGoalText').textContent = '/ ' + goals.protein + 'g';
+            document.getElementById('caloriesGoalText').textContent = '/ ' + goals.calories;
+        }
+
+        function renderWater() {
+            const container = document.getElementById('waterGlasses');
+            container.innerHTML = '';
+            for (let i = 0; i < goals.water; i++) {
+                const glass = document.createElement('div');
+                glass.className = 'water-glass' + (i < todayData.water ? ' filled' : '');
+                glass.textContent = i < todayData.water ? '💧' : '○';
+                glass.onclick = () => toggleWater(i);
+                container.appendChild(glass);
+            }
+            document.getElementById('waterBadge').textContent = todayData.water + '/' + goals.water;
+        }
+
+        window.toggleWater = async function(index) {
+            if (index < todayData.water) {
+                todayData.water = index;
+            } else {
+                todayData.water = index + 1;
+            }
+            renderWater();
+            await saveToday();
+        };
+
+        function renderWorkout() {
+            const container = document.getElementById('workoutContent');
+            
+            if (todayData.workout && todayData.workout.completed) {
+                container.innerHTML = `
+                    <div class="workout-done">
+                        <div class="icon">✅</div>
+                        <h4>${todayData.workout.name} Complete!</h4>
+                        <p>${todayData.workout.exercises || 0} exercises • ${todayData.workout.duration || 0} min</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const selectedWorkout = todayData.selectedWorkout || null;
+            const workout = workouts.find(w => w.id === selectedWorkout) || null;
+
+            container.innerHTML = `
+                <div class="workout-selector">
+                    <div class="workout-dropdown" onclick="toggleWorkoutDropdown()">
+                        <span>${workout ? workout.icon + ' ' + workout.name : 'Select workout...'}</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="workout-options" id="workoutOptions">
+                        ${workouts.map(w => `
+                            <div class="workout-option ${selectedWorkout === w.id ? 'selected' : ''}" onclick="selectWorkout('${w.id}')">
+                                <span class="icon">${w.icon}</span>
+                                <div class="info">
+                                    <h4>${w.name}</h4>
+                                    <p>${w.desc}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ${workout && workout.id !== 'rest' ? `
+                    <div class="workout-preview">
+                        <h4>${workout.name}</h4>
+                        <p>${workout.exercises} exercises + Core + Cardio</p>
+                        <button class="start-workout-btn" onclick="startWorkout()">
+                            Start Workout →
+                        </button>
+                    </div>
+                ` : workout && workout.id === 'rest' ? `
+                    <div class="workout-preview" style="text-align:center;">
+                        <h4>🧘 Rest Day</h4>
+                        <p>Recovery is important! Consider light stretching or a walk.</p>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        window.toggleWorkoutDropdown = function() {
+            const dropdown = document.querySelector('.workout-dropdown');
+            const options = document.getElementById('workoutOptions');
+            dropdown.classList.toggle('open');
+            options.classList.toggle('show');
+        };
+
+        window.selectWorkout = async function(id) {
+            todayData.selectedWorkout = id;
+            document.getElementById('workoutOptions').classList.remove('show');
+            document.querySelector('.workout-dropdown').classList.remove('open');
+            renderWorkout();
+            await saveToday();
+        };
+
+        window.startWorkout = function() {
+            localStorage.setItem('selectedWorkout', todayData.selectedWorkout);
+            window.location.href = 'gym.html';
+        };
+
+        function renderPlannedMeals() {
+            const todayPlan = mealPlan[today];
+            if (!todayPlan || (!todayPlan.breakfast && !todayPlan.lunch && !todayPlan.dinner && !todayPlan.snack)) {
+                document.getElementById('plannedSection').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('plannedSection').style.display = 'block';
+            const container = document.getElementById('plannedMeals');
+            const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+            const logged = todayData.foods.map(f => f.name.toLowerCase());
+            
+            container.innerHTML = meals.map(meal => {
+                const item = todayPlan[meal];
+                if (!item) return '';
+                const isLogged = logged.includes(item.name.toLowerCase());
+                return `
+                    <div class="planned-meal ${isLogged ? 'logged' : ''}" onclick="${isLogged ? '' : `logPlannedMeal('${meal}')`}">
+                        <span class="time">${meal}</span>
+                        <span class="emoji">${item.emoji || '🍽️'}</span>
+                        <div class="info">
+                            <h4>${item.name}</h4>
+                            <p>${item.protein}g protein • ${item.calories} cal</p>
+                        </div>
+                        <button class="action">${isLogged ? '✓ Logged' : 'Log'}</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.logPlannedMeal = async function(meal) {
+            const item = mealPlan[today][meal];
+            if (!item) return;
+            
+            todayData.foods.push({
+                name: item.name,
+                protein: item.protein,
+                calories: item.calories,
+                emoji: item.emoji || '🍽️',
+                portion: 1
+            });
+            todayData.protein += item.protein;
+            todayData.calories += item.calories;
+            
+            renderAll();
+            await saveToday();
+            showToast('✓ ' + item.name + ' logged!');
+        };
+
+
+        function renderCycle() {
+            if (!userData?.trackCycle || !userData?.cycleData?.startDate) {
+                document.getElementById('cycleSection').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('cycleSection').style.display = 'block';
+            
+            // Parse dates as local dates (not UTC)
+            const startStr = userData.cycleData.startDate;
+            const startParts = startStr.split('-');
+            const startYear = parseInt(startParts[0]);
+            const startMonth = parseInt(startParts[1]) - 1;
+            const startDay = parseInt(startParts[2]);
+            
+            const now = new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = now.getMonth();
+            const nowDay = now.getDate();
+            
+            // Create dates at noon to avoid DST issues
+            const startDate = new Date(startYear, startMonth, startDay, 12, 0, 0);
+            const nowDate = new Date(nowYear, nowMonth, nowDay, 12, 0, 0);
+            
+            const cycleLength = userData.cycleData.length || 28;
+            const diffMs = nowDate.getTime() - startDate.getTime();
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            const cycleDay = (diffDays % cycleLength) + 1;
+            
+            let phase = 'Menstrual Phase';
+            let tip = 'Consider lighter workouts and extra rest';
+            
+            if (cycleDay <= 5) {
+                phase = 'Menstrual Phase';
+                tip = 'Consider lighter workouts and extra rest';
+            } else if (cycleDay <= 13) {
+                phase = 'Follicular Phase';
+                tip = 'Energy rising! Great time for intense workouts';
+            } else if (cycleDay <= 16) {
+                phase = 'Ovulation';
+                tip = 'Peak energy! Go for those PRs! 💪';
+            } else {
+                phase = 'Luteal Phase';
+                tip = 'Focus on strength, may need extra carbs';
+            }
+            
+            document.getElementById('cycleDay').textContent = 'Day ' + cycleDay;
+            document.getElementById('cyclePhase').textContent = phase;
+            document.getElementById('cycleTip').textContent = tip;
+        }
+
+        function renderSupplements() {
+            const morning = document.getElementById('suppMorning');
+            const evening = document.getElementById('suppEvening');
+            
+            morning.classList.toggle('taken', todayData.supplements.morning);
+            evening.classList.toggle('taken', todayData.supplements.evening);
+            
+            morning.querySelector('.status').textContent = todayData.supplements.morning ? '✓ Taken' : 'Not taken';
+            evening.querySelector('.status').textContent = todayData.supplements.evening ? '✓ Taken' : 'Not taken';
+            
+            // Show custom pill names
+            document.getElementById('morningPills').textContent = supplementSettings.morning || 'Tap Edit to add';
+            document.getElementById('eveningPills').textContent = supplementSettings.evening || 'Tap Edit to add';
+        }
+
+        window.toggleSupplement = async function(time) {
+            todayData.supplements[time] = !todayData.supplements[time];
+            renderSupplements();
+            await saveToday();
+            showToast(todayData.supplements[time] ? '✓ Supplement logged!' : 'Supplement unmarked');
+        };
+        
+        window.openSupplementsSettings = function() {
+            document.getElementById('morningSupplements').value = supplementSettings.morning || '';
+            document.getElementById('eveningSupplements').value = supplementSettings.evening || '';
+            openModal('supplementsModal');
+        };
+        
+        window.saveSupplementSettings = async function() {
+            supplementSettings.morning = document.getElementById('morningSupplements').value.trim();
+            supplementSettings.evening = document.getElementById('eveningSupplements').value.trim();
+            
+            await setDoc(doc(db, 'users', user.uid, 'data', 'supplementSettings'), supplementSettings);
+            closeModal('supplementsModal');
+            renderSupplements();
+            showToast('✓ Supplements saved!');
+        };
+
+        function renderWeight() {
+            if (weightData.length > 0) {
+                const latest = weightData[weightData.length - 1];
+                const displayWeight = Math.round(latest.weight * 10) / 10;
+                document.getElementById('weightValue').textContent = displayWeight.toFixed(1) + ' kg';
+                currentWeightInput = displayWeight;
+                
+                if (weightData.length > 1) {
+                    const first = weightData[0];
+                    const diff = Math.round((latest.weight - first.weight) * 10) / 10;
+                    document.getElementById('weightChange').textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' kg total';
+                }
+            }
+            
+            // Check if it's a weigh-in day (Mon/Fri)
+            const dayOfWeek = new Date().getDay();
+            const isWeighInDay = dayOfWeek === 1 || dayOfWeek === 5;
+            const hasWeighedToday = weightData.some(w => w.date === today);
+            
+            if (isWeighInDay && !hasWeighedToday) {
+                document.getElementById('weightReminder').innerHTML = '<span class="weight-reminder">Weigh-in day!</span>';
+            } else {
+                document.getElementById('weightReminder').innerHTML = '';
+            }
+        }
+
+        function checkShakeSuggestion() {
+            const hour = new Date().getHours();
+            const remaining = goals.protein - todayData.protein;
+            const hasLoggedShake = todayData.foods.some(f => f.name.toLowerCase().includes('shake'));
+            
+            if (hour >= 15 && remaining >= 20 && remaining <= 50 && !hasLoggedShake) {
+                document.getElementById('shakeSuggestion').style.display = 'flex';
+                document.getElementById('shakeText').textContent = `${remaining}g left - a shake gets you to ${todayData.protein + 24}g!`;
+            } else {
+                document.getElementById('shakeSuggestion').style.display = 'none';
+            }
+        }
+
+        window.logProteinShake = async function() {
+            todayData.foods.push({ name: 'Protein Shake', protein: 24, calories: 120, emoji: '🥤', portion: 1 });
+            todayData.protein += 24;
+            todayData.calories += 120;
+            renderAll();
+            await saveToday();
+            showToast('✓ Protein shake logged!');
+        };
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme');
+            if (theme) document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        // Modal Functions
+        window.openAddFoodModal = function() {
+            document.getElementById('foodSearch').value = '';
+            renderFoodModalContent();
+            openModal('addFoodModal');
+        };
+
+        function renderFoodModalContent(filter = '') {
+            const container = document.getElementById('foodModalContent');
+            const filterLower = filter.toLowerCase();
+            
+            let html = '';
+            
+            // Recent foods
+            if (recentFoods.length > 0 && !filter) {
+                html += '<div class="food-category">Recent</div>';
+                html += recentFoods.slice(0, 5).map(f => `
+                    <div class="food-modal-item" onclick="quickAddFood(${JSON.stringify(f).replace(/"/g, '&quot;')})">
+                        <span class="emoji">${f.emoji || '🍽️'}</span>
+                        <div class="info"><h4>${f.name}</h4><p>${f.protein}g protein • ${f.calories} cal</p></div>
+                    </div>
+                `).join('');
+            }
+            
+            // Quick adds
+            const filteredDefaults = defaultFoods.filter(f => !filter || f.name.toLowerCase().includes(filterLower));
+            if (filteredDefaults.length > 0) {
+                html += '<div class="food-category">Quick Add</div>';
+                html += filteredDefaults.map(f => `
+                    <div class="food-modal-item" onclick="quickAddFood(${JSON.stringify(f).replace(/"/g, '&quot;')})">
+                        <span class="emoji">${f.emoji}</span>
+                        <div class="info"><h4>${f.name}</h4><p>${f.protein}g protein • ${f.calories} cal</p></div>
+                    </div>
+                `).join('');
+            }
+            
+            // Custom entry
+            html += '<div class="food-category">Other</div>';
+            html += `
+                <div class="food-modal-item" onclick="openCustomFoodEntry()">
+                    <span class="emoji">✏️</span>
+                    <div class="info"><h4>Custom Entry</h4><p>Enter macros manually</p></div>
+                </div>
+                <div class="food-modal-item" onclick="openBarcodeScanner()">
+                    <span class="emoji">📷</span>
+                    <div class="info"><h4>Scan Barcode</h4><p>Scan packaged food</p></div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        window.filterFoods = function() {
+            const filter = document.getElementById('foodSearch').value;
+            renderFoodModalContent(filter);
+        };
+
+        window.quickAddFood = async function(food) {
+            todayData.foods.push({ ...food, portion: 1 });
+            todayData.protein += food.protein;
+            todayData.calories += food.calories;
+            
+            // Add to recent foods
+            const existing = recentFoods.findIndex(f => f.name === food.name);
+            if (existing > -1) recentFoods.splice(existing, 1);
+            recentFoods.unshift(food);
+            recentFoods = recentFoods.slice(0, 10);
+            await setDoc(doc(db, 'users', user.uid, 'data', 'recentFoods'), { list: recentFoods });
+            
+            closeModal('addFoodModal');
+            renderAll();
+            await saveToday();
+            showToast('✓ ' + food.name + ' added!');
+        };
+
+        window.openCustomFoodEntry = function() {
+            document.getElementById('customFoodName').value = '';
+            document.getElementById('customFoodProtein').value = '';
+            document.getElementById('customFoodCalories').value = '';
+            closeModal('addFoodModal');
+            openModal('customFoodModal');
+        };
+        
+        window.saveCustomFood = async function() {
+            const name = document.getElementById('customFoodName').value.trim();
+            const protein = parseInt(document.getElementById('customFoodProtein').value) || 0;
+            const calories = parseInt(document.getElementById('customFoodCalories').value) || 0;
+            
+            if (!name) { showToast('Please enter a food name'); return; }
+            
+            await quickAddFood({ name, protein, calories, emoji: '🍽️' });
+            closeModal('customFoodModal');
+        };
+
+        window.openBarcodeScanner = function() {
+            showToast('Barcode scanner coming soon!');
+        };
+
+        window.openEditFoodModal = function(index) {
+            editingFoodIndex = index;
+            editingPortion = todayData.foods[index].portion || 1;
+            const food = todayData.foods[index];
+            
+            document.getElementById('editFoodName').textContent = food.emoji + ' ' + food.name;
+            updateEditFoodModal();
+            openModal('editFoodModal');
+        };
+
+        function updateEditFoodModal() {
+            const food = todayData.foods[editingFoodIndex];
+            const baseProtein = food.protein / (food.portion || 1);
+            const baseCalories = food.calories / (food.portion || 1);
+            
+            document.getElementById('portionValue').textContent = editingPortion.toFixed(2).replace(/\.?0+$/, '');
+            document.getElementById('editProtein').textContent = Math.round(baseProtein * editingPortion) + 'g';
+            document.getElementById('editCalories').textContent = Math.round(baseCalories * editingPortion);
+        }
+
+        window.adjustPortion = function(delta) {
+            editingPortion = Math.max(0.25, editingPortion + delta);
+            updateEditFoodModal();
+        };
+
+        window.saveFood = async function() {
+            const food = todayData.foods[editingFoodIndex];
+            const baseProtein = food.protein / (food.portion || 1);
+            const baseCalories = food.calories / (food.portion || 1);
+            
+            // Recalculate totals
+            todayData.protein -= food.protein;
+            todayData.calories -= food.calories;
+            
+            food.portion = editingPortion;
+            food.protein = Math.round(baseProtein * editingPortion);
+            food.calories = Math.round(baseCalories * editingPortion);
+            
+            todayData.protein += food.protein;
+            todayData.calories += food.calories;
+            
+            closeModal('editFoodModal');
+            renderAll();
+            await saveToday();
+            showToast('✓ Updated!');
+        };
+
+        window.deleteFood = async function() {
+            const food = todayData.foods[editingFoodIndex];
+            todayData.protein -= food.protein;
+            todayData.calories -= food.calories;
+            todayData.foods.splice(editingFoodIndex, 1);
+            
+            closeModal('editFoodModal');
+            renderAll();
+            await saveToday();
+            showToast('Food deleted', true);
+        };
+
+        window.copyYesterday = async function() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+            
+            const yesterdayDoc = await getDoc(doc(db, 'users', user.uid, 'days', yesterdayStr));
+            if (!yesterdayDoc.exists() || !yesterdayDoc.data().foods?.length) {
+                showToast('No foods logged yesterday');
+                return;
+            }
+            
+            const yesterdayData = yesterdayDoc.data();
+            todayData.foods = [...todayData.foods, ...yesterdayData.foods];
+            todayData.protein += yesterdayData.protein;
+            todayData.calories += yesterdayData.calories;
+            
+            renderAll();
+            await saveToday();
+            showToast('✓ Copied ' + yesterdayData.foods.length + ' items!');
+        };
+
+        window.openStreakModal = function() {
+            renderStreakCalendar();
+            openModal('streakModal');
+        };
+
+        function renderStreakCalendar() {
+            const container = document.getElementById('streakCalendar');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            // Days of week header
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            let html = days.map(d => `<div class="streak-day header">${d}</div>`).join('');
+            
+            // First day of month
+            const firstDay = new Date(year, month, 1).getDay();
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="streak-day empty"></div>';
+            }
+            
+            // Days of month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayData = history.find(h => h.date === dateStr);
+                const isToday = dateStr === today;
+                let status = 'missed';
+                
+                if (dayData) {
+                    if (dayData.protein >= goals.protein) status = 'hit';
+                    else if (dayData.protein >= goals.protein * 0.8) status = 'partial';
+                }
+                
+                if (d > now.getDate()) status = 'empty';
+                
+                html += `<div class="streak-day ${status} ${isToday ? 'today' : ''}">${d}</div>`;
+            }
+            
+            container.innerHTML = html;
+            
+            // Stats
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let tempStreak = 0;
+            
+            const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            for (const day of sortedHistory) {
+                if (day.protein >= goals.protein * 0.9) {
+                    currentStreak++;
+                    tempStreak++;
+                } else {
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                    tempStreak = 0;
+                    if (currentStreak > 0) break;
+                }
+            }
+            longestStreak = Math.max(longestStreak, tempStreak);
+            
+            document.getElementById('currentStreak').textContent = currentStreak;
+            document.getElementById('longestStreak').textContent = longestStreak;
+            document.getElementById('totalDays').textContent = history.filter(h => h.protein > 0).length;
+        }
+
+        window.openRingDetail = function(type) {
+            const isProtein = type === 'protein';
+            const current = isProtein ? todayData.protein : todayData.calories;
+            const goal = isProtein ? goals.protein : goals.calories;
+            const remaining = Math.max(0, goal - current);
+            
+            document.getElementById('ringDetailTitle').textContent = isProtein ? '🥩 Protein' : '🔥 Calories';
+            document.getElementById('ringDetailValue').textContent = current + (isProtein ? 'g' : '');
+            document.getElementById('ringDetailGoal').textContent = 'of ' + goal + (isProtein ? 'g' : '') + ' goal';
+            document.getElementById('ringDetailRemaining').textContent = remaining > 0 ? remaining + (isProtein ? 'g' : '') + ' remaining' : '🎉 Goal reached!';
+            
+            // Food breakdown with delete buttons
+            if (todayData.foods.length > 0) {
+                document.getElementById('ringBreakdown').innerHTML = todayData.foods.map((f, i) => `
+                    <div class="breakdown-item" style="display:flex; align-items:center; padding:12px 0;">
+                        <span style="font-size:1.2rem; margin-right:10px;">${f.emoji || '🍽️'}</span>
+                        <div style="flex:1;">
+                            <div style="font-size:0.9rem; font-weight:500;">${f.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${f.protein}g protein • ${f.calories} cal</div>
+                        </div>
+                        <button onclick="editFoodFromRing(${i})" style="background:none; border:none; font-size:1rem; cursor:pointer; padding:8px; color:var(--text-muted);">✏️</button>
+                        <button onclick="deleteFoodFromRing(${i})" style="background:none; border:none; font-size:1rem; cursor:pointer; padding:8px; color:var(--error);">🗑️</button>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('ringBreakdown').innerHTML = `
+                    <div style="text-align:center; padding:20px; color:var(--text-muted);">
+                        <div style="font-size:2rem; margin-bottom:8px;">🍽️</div>
+                        <p>No foods logged yet</p>
+                    </div>
+                `;
+            }
+            
+            // Suggestions if remaining
+            if (remaining > 0 && isProtein) {
+                const suggestions = defaultFoods.filter(f => f.protein <= remaining + 10).slice(0, 3);
+                document.getElementById('ringSuggestions').innerHTML = `
+                    <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:12px;">Suggestions to hit your goal:</h4>
+                    ${suggestions.map(s => `
+                        <div class="suggestion-item" onclick="quickAddFood(${JSON.stringify(s).replace(/"/g, '&quot;')});closeModal('ringDetailModal')">
+                            <span class="emoji">${s.emoji}</span>
+                            <span class="text">${s.name} (+${s.protein}g)</span>
+                            <span class="add">+ Add</span>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                document.getElementById('ringSuggestions').innerHTML = '';
+            }
+            
+            openModal('ringDetailModal');
+        };
+        
+        window.editFoodFromRing = function(index) {
+            closeModal('ringDetailModal');
+            openEditFoodModal(index);
+        };
+        
+        window.deleteFoodFromRing = async function(index) {
+            const food = todayData.foods[index];
+            todayData.protein -= food.protein;
+            todayData.calories -= food.calories;
+            todayData.foods.splice(index, 1);
+            
+            renderAll();
+            await saveToday();
+            
+            // Re-render the modal
+            openRingDetail('protein');
+            showToast('Food removed');
+        };
+
+        window.openWeightModal = function() {
+            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
+            openModal('weightModal');
+        };
+
+        window.adjustWeight = function(delta) {
+            currentWeightInput = Math.max(30, Math.round((currentWeightInput + delta) * 10) / 10);
+            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
+        };
+
+        window.saveWeight = async function() {
+            const weightToSave = Math.round(currentWeightInput * 10) / 10;
+            const existing = weightData.findIndex(w => w.date === today);
+            if (existing > -1) {
+                weightData[existing].weight = weightToSave;
+            } else {
+                weightData.push({ date: today, weight: weightToSave });
+            }
+            
+            await setDoc(doc(db, 'users', user.uid, 'data', 'weight'), { list: weightData });
+            closeModal('weightModal');
+            renderWeight();
+            showToast('✓ Weight saved!');
+        };
+
+        window.openCycleModal = function() {
+            if (!userData?.trackCycle || !userData?.cycleData?.startDate) {
+                showToast('Enable cycle tracking in Profile → Settings');
+                return;
+            }
+            
+            // Parse dates as local dates (not UTC) - same as renderCycle
+            const startStr = userData.cycleData.startDate;
+            const startParts = startStr.split('-');
+            const startYear = parseInt(startParts[0]);
+            const startMonth = parseInt(startParts[1]) - 1;
+            const startDayNum = parseInt(startParts[2]);
+            
+            const now = new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = now.getMonth();
+            const nowDay = now.getDate();
+            
+            // Create dates at noon to avoid DST issues
+            const startDate = new Date(startYear, startMonth, startDayNum, 12, 0, 0);
+            const nowDate = new Date(nowYear, nowMonth, nowDay, 12, 0, 0);
+            
+            const cycleLength = userData.cycleData.length || 28;
+            const diffMs = nowDate.getTime() - startDate.getTime();
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            const cycleDay = (diffDays % cycleLength) + 1;
+            
+            let phase, icon, tips, workout, nutrition;
+            
+            if (cycleDay <= 5) {
+                phase = 'Menstrual Phase';
+                icon = '🩸';
+                tips = 'Your body is shedding its uterine lining. Energy may be lower. Focus on rest, gentle movement, and nourishing foods. Stay hydrated and listen to your body.';
+                workout = 'Light yoga, walking, or stretching. Avoid intense workouts if you feel fatigued.';
+                nutrition = 'Iron-rich foods (spinach, red meat), vitamin C for absorption, warm comfort foods, and plenty of water.';
+            } else if (cycleDay <= 13) {
+                phase = 'Follicular Phase';
+                icon = '🌱';
+                tips = 'Estrogen is rising! You may feel more energetic, creative, and social. Great time to start new projects and try new things.';
+                workout = 'This is your power phase! Great for strength training, HIIT, trying new exercises, and pushing for PRs.';
+                nutrition = 'Lean proteins, fresh vegetables, fermented foods. Your body can handle more carbs now.';
+            } else if (cycleDay <= 16) {
+                phase = 'Ovulation';
+                icon = '✨';
+                tips = 'Peak energy and confidence! Estrogen and testosterone are at their highest. You may feel most attractive and social.';
+                workout = 'Go for those PRs! High intensity workouts, heavy lifting, challenging classes - your body is ready!';
+                nutrition = 'Anti-inflammatory foods, fiber-rich vegetables, lighter meals as appetite may decrease.';
+            } else {
+                phase = 'Luteal Phase';
+                icon = '🌙';
+                tips = 'Progesterone rises. You may feel more introspective, have cravings, and need more rest in the second half. PMS symptoms may appear.';
+                workout = 'Moderate strength training, steady-state cardio, pilates. Reduce intensity as you approach your period.';
+                nutrition = 'Complex carbs (sweet potato, oats), magnesium-rich foods (dark chocolate!), B vitamins, and extra protein for cravings.';
+            }
+            
+            document.getElementById('cycleDetailIcon').textContent = icon;
+            document.getElementById('cycleDetailDay').textContent = 'Day ' + cycleDay;
+            document.getElementById('cycleDetailPhase').textContent = phase;
+            document.getElementById('cycleDetailTips').textContent = tips;
+            document.getElementById('cycleDetailWorkout').textContent = workout;
+            document.getElementById('cycleDetailNutrition').textContent = nutrition;
+            document.getElementById('cycleUpdateDate').value = userData.cycleData.startDate;
+            
+            openModal('cycleDetailModal');
+        };
+        
+        window.updateCycleDate = async function() {
+            const newDate = document.getElementById('cycleUpdateDate').value;
+            if (!newDate) return;
+            
+            userData.cycleData.startDate = newDate;
+            await updateDoc(doc(db, 'users', user.uid), { cycleData: userData.cycleData });
+            closeModal('cycleDetailModal');
+            renderCycle();
+            showToast('✓ Cycle date updated!');
+        };
+
+        window.openProfile = function() {
+            window.location.href = 'profile.html';
+        };
+        
+        const avatarOptions = ['👤', '👩', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '🧑', '👨', '🧔', '👴', '💪', '🏃‍♀️', '🧘‍♀️', '🏋️‍♀️', '🦸‍♀️', '🦹‍♀️', '🧚‍♀️', '🐱', '🐶', '🦋'];
+        
+        window.openAvatarPicker = function() {
+            const currentAvatar = userData?.avatar || '👤';
+            document.getElementById('avatarGrid').innerHTML = avatarOptions.map(a => `
+                <div onclick="selectAvatar('${a}')" style="
+                    width:50px; height:50px; 
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:1.8rem; 
+                    border-radius:12px; 
+                    cursor:pointer;
+                    background: ${a === currentAvatar ? 'var(--accent-light)' : 'var(--bg-secondary)'};
+                    border: 2px solid ${a === currentAvatar ? 'var(--accent)' : 'transparent'};
+                    transition: all 0.15s;
+                ">${a}</div>
+            `).join('');
+            openModal('avatarModal');
+        };
+        
+        window.selectAvatar = async function(emoji) {
+            userData.avatar = emoji;
+            await updateDoc(doc(db, 'users', user.uid), { avatar: emoji });
+            document.getElementById('avatarBtn').textContent = emoji;
+            closeModal('avatarModal');
+            showToast('✓ Avatar updated!');
+        };
+
+        // Modal helpers
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('show');
+            document.body.style.overflow = '';
+        };
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal(overlay.id);
+            });
+        });
+
+        // Toast
+        let toastTimeout;
+        function showToast(msg, hasUndo = false) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = msg + (hasUndo ? '<span class="undo" onclick="undoDelete()">Undo</span>' : '');
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

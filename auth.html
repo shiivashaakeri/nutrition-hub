@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nutrition Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7d8471">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf9f7; --bg-card: #ffffff; --bg-secondary: #f3f1ee;
+            --text: #1a1a1a; --text-secondary: #6b6b6b; --text-muted: #999;
+            --accent: #7d8471; --accent-light: rgba(125,132,113,0.12);
+            --warm: #c4846c; --warm-light: rgba(196,132,108,0.12);
+            --border: rgba(0,0,0,0.06); --error: #e53935; --success: #4caf50;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            min-height: 100vh; min-height: 100dvh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 420px; }
+        
+        /* Logo */
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo .icon { font-size: 4rem; margin-bottom: 12px; }
+        .logo h1 { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+        .logo p { font-size: 0.9rem; color: var(--text-secondary); margin-top: 6px; }
+        
+        /* Auth Card */
+        .auth-card { background: var(--bg-card); border-radius: 24px; padding: 32px 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .tab { flex: 1; padding: 12px; border: none; border-radius: 12px; background: var(--bg-secondary); font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+        .tab.active { background: var(--accent); color: white; }
+        
+        /* Forms */
+        .form { display: none; }
+        .form.active { display: block; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 14px; font-size: 1rem; background: var(--bg-secondary); color: var(--text); font-family: inherit; transition: border-color 0.2s; }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+        
+        /* Error */
+        .error-msg { background: rgba(229,57,53,0.1); color: var(--error); padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+        .error-msg.show { display: block; }
+        
+        /* Buttons */
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 14px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-google { background: white; color: var(--text); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; }
+        .btn-google:hover { border-color: var(--accent); }
+        .btn-google svg { width: 20px; height: 20px; }
+        
+        /* Divider */
+        .divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .divider span { font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Footer */
+        .footer { text-align: center; margin-top: 24px; font-size: 0.85rem; color: var(--text-muted); }
+        
+        /* Loading */
+        .loading { display: none; text-align: center; padding: 40px; }
+        .loading.show { display: block; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-secondary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* ============ ONBOARDING ============ */
+        .onboarding { display: none; }
+        .onboarding.active { display: block; }
+        
+        .onboarding-header { text-align: center; margin-bottom: 32px; }
+        .onboarding-header h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .onboarding-header p { font-size: 0.9rem; color: var(--text-secondary); }
+        
+        /* Progress dots */
+        .progress-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-secondary); transition: all 0.3s; }
+        .dot.active { background: var(--accent); width: 24px; border-radius: 5px; }
+        .dot.done { background: var(--accent); }
+        
+        /* Step content */
+        .step { display: none; }
+        .step.active { display: block; }
+        
+        /* Goal slider */
+        .goal-slider { text-align: center; margin: 32px 0; }
+        .goal-value { font-size: 3rem; font-weight: 700; color: var(--accent); }
+        .goal-unit { font-size: 1.2rem; color: var(--text-secondary); }
+        .slider-controls { display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 16px; }
+        .slider-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg-card); font-size: 1.5rem; cursor: pointer; color: var(--text); transition: all 0.15s; }
+        .slider-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .slider-btn:active { transform: scale(0.95); }
+        input[type="range"] { width: 200px; accent-color: var(--accent); }
+        .goal-hint { font-size: 0.85rem; color: var(--text-muted); margin-top: 16px; }
+        
+        /* Option cards */
+        .option-cards { display: flex; flex-direction: column; gap: 12px; }
+        .option-card { display: flex; align-items: center; gap: 16px; padding: 18px; background: var(--bg-secondary); border-radius: 16px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+        .option-card:hover { border-color: var(--accent); }
+        .option-card.selected { border-color: var(--accent); background: var(--accent-light); }
+        .option-card .icon { font-size: 1.5rem; }
+        .option-card .text h4 { font-size: 0.95rem; font-weight: 600; }
+        .option-card .text p { font-size: 0.8rem; color: var(--text-secondary); }
+        .option-card .check { margin-left: auto; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: white; }
+        .option-card.selected .check { background: var(--accent); border-color: var(--accent); }
+        
+        /* Cycle setup */
+        .cycle-toggle { display: flex; gap: 12px; margin-bottom: 24px; }
+        .cycle-toggle button { flex: 1; padding: 16px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg-card); font-size: 0.95rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+        .cycle-toggle button.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+        .cycle-fields { display: none; }
+        .cycle-fields.show { display: block; }
+        
+        /* Nav buttons */
+        .onboarding-nav { display: flex; gap: 12px; margin-top: 32px; }
+        .onboarding-nav .btn { flex: 1; }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text); }
+        
+        /* Skip */
+        .skip-link { text-align: center; margin-top: 16px; }
+        .skip-link a { color: var(--text-muted); font-size: 0.85rem; text-decoration: none; }
+        .skip-link a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <div class="icon">🥗</div>
+            <h1>Nutrition Hub</h1>
+            <p>Track nutrition, workouts & progress</p>
+        </div>
+        
+        <!-- AUTH CARD -->
+        <div class="auth-card" id="authCard">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Signing you in...</p>
+            </div>
+            
+            <div id="authForms">
+                <div class="tabs">
+                    <button class="tab active" onclick="showForm('login')">Log In</button>
+                    <button class="tab" onclick="showForm('signup')">Sign Up</button>
+                </div>
+                
+                <div class="error-msg" id="errorMsg"></div>
+                
+                <form class="form active" id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="loginBtn">Log In</button>
+                </form>
+                
+                <form class="form" id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="At least 6 characters" minlength="6" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="signupConfirm" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="signupBtn">Create Account</button>
+                </form>
+                
+                <div class="divider"><span>or</span></div>
+                
+                <button class="btn btn-google" onclick="handleGoogle()">
+                    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+        
+        <!-- ONBOARDING -->
+        <div class="auth-card onboarding" id="onboarding">
+            <div class="progress-dots">
+                <div class="dot active" data-step="1"></div>
+                <div class="dot" data-step="2"></div>
+                <div class="dot" data-step="3"></div>
+                <div class="dot" data-step="4"></div>
+                <div class="dot" data-step="5"></div>
+            </div>
+            
+            <!-- Step 1: Protein Goal -->
+            <div class="step active" data-step="1">
+                <div class="onboarding-header">
+                    <h2>What's your protein goal?</h2>
+                    <p>We'll help you hit it every day</p>
+                </div>
+                <div class="goal-slider">
+                    <span class="goal-value" id="proteinValue">125</span>
+                    <span class="goal-unit">grams</span>
+                    <div class="slider-controls">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('protein', -5)">−</button>
+                        <input type="range" min="50" max="200" value="125" id="proteinSlider" oninput="updateGoal('protein', this.value)">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('protein', 5)">+</button>
+                    </div>
+                    <p class="goal-hint">💡 Most women need 100-150g daily</p>
+                </div>
+            </div>
+            
+            <!-- Step 2: Calorie Goal -->
+            <div class="step" data-step="2">
+                <div class="onboarding-header">
+                    <h2>What's your calorie target?</h2>
+                    <p>For maintaining or losing weight</p>
+                </div>
+                <div class="goal-slider">
+                    <span class="goal-value" id="caloriesValue">1550</span>
+                    <span class="goal-unit">calories</span>
+                    <div class="slider-controls">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('calories', -50)">−</button>
+                        <input type="range" min="1200" max="2500" value="1550" step="50" id="caloriesSlider" oninput="updateGoal('calories', this.value)">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('calories', 50)">+</button>
+                    </div>
+                    <p class="goal-hint">💡 Adjust based on your activity level</p>
+                </div>
+            </div>
+            
+            <!-- Step 3: Current Weight -->
+            <div class="step" data-step="3">
+                <div class="onboarding-header">
+                    <h2>What's your current weight?</h2>
+                    <p>Optional - helps track progress</p>
+                </div>
+                <div class="goal-slider">
+                    <span class="goal-value" id="weightValue">65</span>
+                    <span class="goal-unit">kg</span>
+                    <div class="slider-controls">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('weight', -1)">−</button>
+                        <input type="range" min="40" max="150" value="65" id="weightSlider" oninput="updateGoal('weight', this.value)">
+                        <button type="button" class="slider-btn" onclick="adjustGoal('weight', 1)">+</button>
+                    </div>
+                </div>
+                <div class="skip-link"><a href="#" onclick="skipWeight()">Skip for now</a></div>
+            </div>
+            
+            <!-- Step 4: Workout Days -->
+            <div class="step" data-step="4">
+                <div class="onboarding-header">
+                    <h2>How often do you work out?</h2>
+                    <p>We'll adjust recommendations</p>
+                </div>
+                <div class="option-cards">
+                    <div class="option-card" onclick="selectWorkoutFreq(2)">
+                        <span class="icon">🌱</span>
+                        <div class="text"><h4>2 days/week</h4><p>Just starting out</p></div>
+                        <div class="check">✓</div>
+                    </div>
+                    <div class="option-card selected" onclick="selectWorkoutFreq(4)">
+                        <span class="icon">💪</span>
+                        <div class="text"><h4>3-4 days/week</h4><p>Regular routine</p></div>
+                        <div class="check">✓</div>
+                    </div>
+                    <div class="option-card" onclick="selectWorkoutFreq(6)">
+                        <span class="icon">🔥</span>
+                        <div class="text"><h4>5-6 days/week</h4><p>Dedicated athlete</p></div>
+                        <div class="check">✓</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 5: Cycle Tracking -->
+            <div class="step" data-step="5">
+                <div class="onboarding-header">
+                    <h2>Track your cycle?</h2>
+                    <p>Get phase-based workout & nutrition tips</p>
+                </div>
+                <div class="cycle-toggle">
+                    <button type="button" onclick="toggleCycle(true)" id="cycleYes">Yes, track it</button>
+                    <button type="button" class="active" onclick="toggleCycle(false)" id="cycleNo">No thanks</button>
+                </div>
+                <div class="cycle-fields" id="cycleFields">
+                    <div class="input-group">
+                        <label>When did your last period start?</label>
+                        <input type="date" id="cycleStartDate">
+                    </div>
+                    <div class="input-group">
+                        <label>Average cycle length (days)</label>
+                        <input type="number" id="cycleLength" value="28" min="21" max="40">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onboarding-nav">
+                <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()" style="display:none;">Back</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Continue</button>
+            </div>
+        </div>
+        
+        <p class="footer">Your data syncs across all devices 🔄</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3FOyamcpwss0nWLFyFeSIHEn29Ew8kcU",
+            authDomain: "nutrition-hub-e010a.firebaseapp.com",
+            projectId: "nutrition-hub-e010a",
+            storageBucket: "nutrition-hub-e010a.firebasestorage.app",
+            messagingSenderId: "48854042250",
+            appId: "1:48854042250:web:b71cc4a22dadb6258c8f73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // Onboarding state
+        let currentStep = 1;
+        let onboardingData = {
+            goals: { protein: 125, calories: 1550, water: 8 },
+            weight: null,
+            workoutFreq: 4,
+            trackCycle: false,
+            cycleData: null
+        };
+        let isNewUser = false;
+
+        // Check auth state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists() && userDoc.data().onboardingComplete) {
+                    window.location.href = 'today.html';
+                } else {
+                    // Show onboarding
+                    isNewUser = true;
+                    showOnboarding();
+                }
+            }
+        });
+
+        // Show/hide forms
+        window.showForm = function(form) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+            document.getElementById('errorMsg').classList.remove('show');
+            if (form === 'login') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('signupForm').classList.add('active');
+            }
+        };
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+            document.getElementById('authForms').style.display = show ? 'none' : 'block';
+        }
+
+        function showOnboarding() {
+            document.getElementById('authCard').querySelector('#authForms').style.display = 'none';
+            document.getElementById('authCard').querySelector('#loading').classList.remove('show');
+            document.getElementById('authCard').style.display = 'none';
+            document.getElementById('onboarding').classList.add('active');
+        }
+
+        // Login
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                showError(getErrorMessage(error.code));
+                btn.disabled = false;
+                btn.textContent = 'Log In';
+            }
+        };
+
+        // Signup
+        window.handleSignup = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+            const btn = document.getElementById('signupBtn');
+            if (password !== confirm) { showError("Passwords don't match"); return; }
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                isNewUser = true;
+                showOnboarding();
+            } catch (error) {
+                showError(getErrorMessage(error.code));
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        };
+
+        // Google Sign In
+        window.handleGoogle = async function() {
+            showLoading(true);
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+                if (!userDoc.exists()) {
+                    isNewUser = true;
+                    showOnboarding();
+                }
+            } catch (error) {
+                showLoading(false);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    showError(getErrorMessage(error.code));
+                }
+            }
+        };
+
+        // Onboarding functions
+        window.updateGoal = function(type, value) {
+            document.getElementById(type + 'Value').textContent = value;
+            if (type === 'protein') onboardingData.goals.protein = parseInt(value);
+            else if (type === 'calories') onboardingData.goals.calories = parseInt(value);
+            else if (type === 'weight') onboardingData.weight = parseFloat(value);
+        };
+
+        window.adjustGoal = function(type, delta) {
+            const slider = document.getElementById(type + 'Slider');
+            const newVal = parseInt(slider.value) + delta;
+            slider.value = newVal;
+            updateGoal(type, newVal);
+        };
+
+        window.skipWeight = function() {
+            onboardingData.weight = null;
+            nextStep();
+        };
+
+        window.selectWorkoutFreq = function(freq) {
+            onboardingData.workoutFreq = freq;
+            document.querySelectorAll('.step[data-step="4"] .option-card').forEach(c => c.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        };
+
+        window.toggleCycle = function(track) {
+            onboardingData.trackCycle = track;
+            document.getElementById('cycleYes').classList.toggle('active', track);
+            document.getElementById('cycleNo').classList.toggle('active', !track);
+            document.getElementById('cycleFields').classList.toggle('show', track);
+        };
+
+        window.nextStep = async function() {
+            if (currentStep === 5) {
+                // Save and finish
+                if (onboardingData.trackCycle) {
+                    const startDate = document.getElementById('cycleStartDate').value;
+                    const length = parseInt(document.getElementById('cycleLength').value) || 28;
+                    if (startDate) {
+                        onboardingData.cycleData = { startDate, length };
+                    }
+                }
+                await finishOnboarding();
+                return;
+            }
+            currentStep++;
+            updateStepUI();
+        };
+
+        window.prevStep = function() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        };
+
+        function updateStepUI() {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+            
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                d.classList.remove('active', 'done');
+                if (i + 1 === currentStep) d.classList.add('active');
+                else if (i + 1 < currentStep) d.classList.add('done');
+            });
+            
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').textContent = currentStep === 5 ? 'Get Started 🚀' : 'Continue';
+        }
+
+        async function finishOnboarding() {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const userData = {
+                email: user.email,
+                createdAt: new Date().toISOString(),
+                goals: onboardingData.goals,
+                workoutFreq: onboardingData.workoutFreq,
+                trackCycle: onboardingData.trackCycle,
+                cycleData: onboardingData.cycleData,
+                startDate: new Date().toISOString().split('T')[0],
+                onboardingComplete: true
+            };
+            
+            await setDoc(doc(db, 'users', user.uid), userData);
+            
+            // Log initial weight if provided
+            if (onboardingData.weight) {
+                await setDoc(doc(db, 'users', user.uid, 'data', 'weight'), {
+                    list: [{ date: new Date().toDateString(), weight: onboardingData.weight }]
+                });
+            }
+            
+            window.location.href = 'today.html';
+        }
+
+        function getErrorMessage(code) {
+            const messages = {
+                'auth/email-already-in-use': 'Email already in use',
+                'auth/invalid-email': 'Invalid email address',
+                'auth/weak-password': 'Password is too weak',
+                'auth/user-not-found': 'No account with this email',
+                'auth/wrong-password': 'Incorrect password',
+                'auth/invalid-credential': 'Invalid email or password',
+                'auth/too-many-requests': 'Too many attempts. Try again later',
+            };
+            return messages[code] || 'An error occurred. Please try again.';
+        }
+    </script>
+</body>
+</html>

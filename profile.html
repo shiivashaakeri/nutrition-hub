@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Profile | Nutrition Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7d8471">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf9f7; --bg-card: #ffffff; --bg-secondary: #f3f1ee;
+            --text: #1a1a1a; --text-secondary: #6b6b6b; --text-muted: #999;
+            --accent: #7d8471; --accent-light: rgba(125,132,113,0.12);
+            --warm: #c4846c; --warm-light: rgba(196,132,108,0.12);
+            --border: rgba(0,0,0,0.06); --error: #e53935; --success: #4caf50;
+        }
+        [data-theme="dark"] {
+            --bg: #111110; --bg-card: #1c1c1a; --bg-secondary: #242422;
+            --text: #f5f5f4; --text-secondary: #a3a3a3; --text-muted: #666;
+            --border: rgba(255,255,255,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+        
+        /* Header */
+        .header { padding: 20px; display: flex; align-items: center; gap: 16px; }
+        .back-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .header h1 { font-size: 1.3rem; font-weight: 700; }
+        
+        /* Profile Card */
+        .profile-card { margin: 0 20px 24px; padding: 32px 24px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); text-align: center; }
+        .avatar-large { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-light), var(--warm-light)); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 16px; position: relative; }
+        .avatar-edit { position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: white; cursor: pointer; }
+        .profile-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .profile-email { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px; }
+        .profile-since { font-size: 0.8rem; color: var(--text-secondary); }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 20px 24px; }
+        .stat-card { background: var(--bg-card); border-radius: 16px; padding: 16px 12px; text-align: center; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+        .stat-card:active { transform: scale(0.95); }
+        .stat-card .icon { font-size: 1.3rem; margin-bottom: 6px; }
+        .stat-card .value { font-size: 1.2rem; font-weight: 700; }
+        .stat-card .label { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+        
+        /* Sections */
+        .section { margin: 0 20px 20px; }
+        .section-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-left: 4px; }
+        .section-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
+        
+        /* Settings Rows */
+        .settings-row { display: flex; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row:active { background: var(--bg-secondary); }
+        .settings-row .icon { font-size: 1.3rem; margin-right: 16px; width: 32px; text-align: center; }
+        .settings-row .info { flex: 1; }
+        .settings-row .info h4 { font-size: 0.95rem; font-weight: 500; }
+        .settings-row .info p { font-size: 0.8rem; color: var(--text-muted); }
+        .settings-row .value { font-size: 0.9rem; color: var(--text-secondary); margin-right: 8px; }
+        .settings-row .arrow { color: var(--text-muted); font-size: 0.9rem; }
+        
+        /* Toggle Switch */
+        .toggle { width: 52px; height: 30px; background: var(--bg-secondary); border-radius: 15px; position: relative; cursor: pointer; transition: background 0.2s; }
+        .toggle.active { background: var(--accent); }
+        .toggle::after { content: ''; position: absolute; width: 24px; height: 24px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .toggle.active::after { transform: translateX(22px); }
+        
+        /* Danger Zone */
+        .danger-row { color: var(--error); }
+        .danger-row .icon { color: var(--error); }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--bg-card); border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+        .modal-overlay.show .modal { transform: translateY(0); }
+        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+        .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Form inputs */
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .input-group input, .input-group select { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 14px; font-size: 1rem; background: var(--bg-secondary); color: var(--text); font-family: inherit; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--accent); }
+        .input-row { display: flex; gap: 12px; }
+        .input-row .input-group { flex: 1; }
+        
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 14px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text); }
+        .btn-danger { background: rgba(229,57,53,0.1); color: var(--error); }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 14px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; z-index: 300; opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        /* Theme Cards */
+        .theme-options { display: flex; gap: 12px; margin-bottom: 20px; }
+        .theme-card { flex: 1; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+        .theme-card.light { background: #faf9f7; color: #1a1a1a; }
+        .theme-card.dark { background: #1c1c1a; color: #f5f5f4; }
+        .theme-card.selected { border-color: var(--accent); }
+        .theme-card .icon { font-size: 2rem; margin-bottom: 8px; }
+        .theme-card .label { font-size: 0.9rem; font-weight: 600; }
+        
+        /* Confirmation Dialog */
+        .confirm-dialog { text-align: center; padding: 20px 0; }
+        .confirm-dialog .icon { font-size: 4rem; margin-bottom: 16px; }
+        .confirm-dialog h3 { font-size: 1.2rem; margin-bottom: 8px; }
+        .confirm-dialog p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 24px; }
+        .confirm-buttons { display: flex; gap: 12px; }
+        .confirm-buttons .btn { flex: 1; }
+        
+        .emoji-avatar { width: 100%; aspect-ratio: 1; background: var(--bg-secondary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+        .emoji-avatar:hover { border-color: var(--accent); transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    
+    <header class="header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>Profile</h1>
+    </header>
+    
+    <div class="profile-card">
+        <div class="avatar-large" id="avatar">
+            👤
+            <div class="avatar-edit" onclick="changeAvatar()">✏️</div>
+        </div>
+        <div class="profile-name" id="userName">Loading...</div>
+        <div class="profile-email" id="userEmail">...</div>
+        <div class="profile-since" id="userSince">Member since ...</div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card" onclick="showStatDetail('streak')">
+            <div class="icon">🔥</div>
+            <div class="value" id="statStreak">0</div>
+            <div class="label">Streak</div>
+        </div>
+        <div class="stat-card" onclick="showStatDetail('days')">
+            <div class="icon">📅</div>
+            <div class="value" id="statDays">0</div>
+            <div class="label">Days</div>
+        </div>
+        <div class="stat-card" onclick="showStatDetail('prs')">
+            <div class="icon">🏆</div>
+            <div class="value" id="statPRs">0</div>
+            <div class="label">PRs</div>
+        </div>
+        <div class="stat-card" onclick="showStatDetail('badges')">
+            <div class="icon">🏅</div>
+            <div class="value" id="statBadges">0</div>
+            <div class="label">Badges</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Daily Goals</div>
+        <div class="section-card">
+            <div class="settings-row" onclick="openGoalsModal()">
+                <span class="icon">🎯</span>
+                <div class="info">
+                    <h4>Nutrition Goals</h4>
+                    <p id="goalsPreview">Protein, calories, water</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Tracking</div>
+        <div class="section-card">
+            <div class="settings-row" onclick="openCycleSettings()">
+                <span class="icon">🌸</span>
+                <div class="info">
+                    <h4>Cycle Tracking</h4>
+                    <p id="cycleStatus">Off</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+            <div class="settings-row" onclick="openStartDateModal()">
+                <span class="icon">📆</span>
+                <div class="info">
+                    <h4>Start Date</h4>
+                    <p id="startDatePreview">For rewards & stats</p>
+                </div>
+                <span class="value" id="startDateValue">-</span>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Appearance</div>
+        <div class="section-card">
+            <div class="settings-row" onclick="openThemeModal()">
+                <span class="icon">🎨</span>
+                <div class="info">
+                    <h4>Theme</h4>
+                    <p>Light or dark mode</p>
+                </div>
+                <span class="value" id="themeValue">Light</span>
+                <span class="arrow">→</span>
+            </div>
+            <div class="settings-row" onclick="openUnitsModal()">
+                <span class="icon">📏</span>
+                <div class="info">
+                    <h4>Units</h4>
+                    <p>Weight & measurements</p>
+                </div>
+                <span class="value" id="unitsValue">kg / cm</span>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Notifications</div>
+        <div class="section-card">
+            <div class="settings-row">
+                <span class="icon">🔔</span>
+                <div class="info">
+                    <h4>Meal Reminders</h4>
+                    <p>Breakfast, lunch, dinner</p>
+                </div>
+                <div class="toggle" id="toggleMeals" onclick="toggleSetting('meals')"></div>
+            </div>
+            <div class="settings-row">
+                <span class="icon">💧</span>
+                <div class="info">
+                    <h4>Water Reminders</h4>
+                    <p>Every 2 hours</p>
+                </div>
+                <div class="toggle" id="toggleWater" onclick="toggleSetting('water')"></div>
+            </div>
+            <div class="settings-row">
+                <span class="icon">⚖️</span>
+                <div class="info">
+                    <h4>Weigh-in Reminders</h4>
+                    <p>Mon & Fri mornings</p>
+                </div>
+                <div class="toggle active" id="toggleWeighIn" onclick="toggleSetting('weighIn')"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Data</div>
+        <div class="section-card">
+            <div class="settings-row" onclick="exportData()">
+                <span class="icon">📤</span>
+                <div class="info">
+                    <h4>Export All Data</h4>
+                    <p>Download as JSON backup</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+            <div class="settings-row" onclick="document.getElementById('importFile').click()">
+                <span class="icon">📥</span>
+                <div class="info">
+                    <h4>Import Data</h4>
+                    <p>Restore from backup</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Account</div>
+        <div class="section-card">
+            <div class="settings-row" onclick="signOut()">
+                <span class="icon">🚪</span>
+                <div class="info">
+                    <h4>Sign Out</h4>
+                    <p>You can sign back in anytime</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+            <div class="settings-row danger-row" onclick="openDeleteAccountModal()">
+                <span class="icon">🗑️</span>
+                <div class="info">
+                    <h4>Delete Account</h4>
+                    <p>Permanently delete all data</p>
+                </div>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align:center; padding: 24px; color: var(--text-muted); font-size: 0.8rem;">
+        Nutrition Hub v5.0<br>
+        Made with 💚
+    </div>
+    
+    <!-- Goals Modal -->
+    <div class="modal-overlay" id="goalsModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🎯 Daily Goals</h3>
+                <button class="modal-close" onclick="closeModal('goalsModal')">✕</button>
+            </div>
+            <div class="input-group">
+                <label>Protein Goal (g)</label>
+                <input type="number" id="goalProtein" placeholder="125">
+            </div>
+            <div class="input-group">
+                <label>Calorie Goal</label>
+                <input type="number" id="goalCalories" placeholder="1550">
+            </div>
+            <div class="input-group">
+                <label>Water Goal (glasses)</label>
+                <input type="number" id="goalWater" placeholder="8">
+            </div>
+            <button class="btn btn-primary" onclick="saveGoals()">Save Goals</button>
+        </div>
+    </div>
+    
+    <!-- Cycle Settings Modal -->
+    <div class="modal-overlay" id="cycleModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🌸 Cycle Tracking</h3>
+                <button class="modal-close" onclick="closeModal('cycleModal')">✕</button>
+            </div>
+            <div class="settings-row" style="background:var(--bg-secondary);border-radius:14px;margin-bottom:20px;">
+                <span class="icon">📊</span>
+                <div class="info">
+                    <h4>Enable Tracking</h4>
+                    <p>Get phase-based tips</p>
+                </div>
+                <div class="toggle" id="toggleCycle" onclick="toggleCycleTracking()"></div>
+            </div>
+            <div id="cycleFields" style="display:none;">
+                <div class="input-group">
+                    <label>Last Period Start Date</label>
+                    <input type="date" id="cycleStartDate">
+                </div>
+                <div class="input-group">
+                    <label>Average Cycle Length (days)</label>
+                    <input type="number" id="cycleLength" value="28" min="21" max="40">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveCycleSettings()">Save</button>
+        </div>
+    </div>
+    
+    <!-- Theme Modal -->
+    <div class="modal-overlay" id="themeModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>🎨 Theme</h3>
+                <button class="modal-close" onclick="closeModal('themeModal')">✕</button>
+            </div>
+            <div class="theme-options">
+                <div class="theme-card light" onclick="setTheme('light')">
+                    <div class="icon">☀️</div>
+                    <div class="label">Light</div>
+                </div>
+                <div class="theme-card dark" onclick="setTheme('dark')">
+                    <div class="icon">🌙</div>
+                    <div class="label">Dark</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Start Date Modal -->
+    <div class="modal-overlay" id="startDateModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>📆 Start Date</h3>
+                <button class="modal-close" onclick="closeModal('startDateModal')">✕</button>
+            </div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:16px;">This date is used to calculate your rewards milestones.</p>
+            <div class="input-group">
+                <label>Journey Start Date</label>
+                <input type="date" id="startDateInput">
+            </div>
+            <button class="btn btn-primary" onclick="saveStartDate()">Save</button>
+        </div>
+    </div>
+    
+    <!-- Delete Account Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="confirm-dialog">
+                <div class="icon">⚠️</div>
+                <h3>Delete Account?</h3>
+                <p>This will permanently delete all your data including history, measurements, PRs, and settings. This cannot be undone.</p>
+                <div class="confirm-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteAccount()">Delete Forever</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sign Out Modal -->
+    <div class="modal-overlay" id="signOutModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="confirm-dialog">
+                <div class="icon">👋</div>
+                <h3>Sign Out?</h3>
+                <p>Your data will be safely stored and waiting when you return.</p>
+                <div class="confirm-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('signOutModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmSignOut()">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Picker Modal -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Choose Avatar</h3>
+                <button class="modal-close" onclick="closeModal('avatarModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px;">
+                    <div class="emoji-avatar" onclick="selectAvatar('👩')">👩</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('👩‍🦰')">👩‍🦰</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('👩‍🦱')">👩‍🦱</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('👱‍♀️')">👱‍♀️</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('👩‍🦳')">👩‍🦳</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🧑')">🧑</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('💪')">💪</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🏋️‍♀️')">🏋️‍♀️</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🧘‍♀️')">🧘‍♀️</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🏃‍♀️')">🏃‍♀️</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🌸')">🌸</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🦋')">🦋</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🌺')">🌺</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('⭐')">⭐</div>
+                    <div class="emoji-avatar" onclick="selectAvatar('🔥')">🔥</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Units Modal -->
+    <div class="modal-overlay" id="unitsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📏 Units</h3>
+                <button class="modal-close" onclick="closeModal('unitsModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Weight</label>
+                    <select id="weightUnit">
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="lbs">Pounds (lbs)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Measurements</label>
+                    <select id="measureUnit">
+                        <option value="cm">Centimeters (cm)</option>
+                        <option value="in">Inches (in)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveUnits()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, deleteUser } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3FOyamcpwss0nWLFyFeSIHEn29Ew8kcU",
+            authDomain: "nutrition-hub-e010a.firebaseapp.com",
+            projectId: "nutrition-hub-e010a",
+            storageBucket: "nutrition-hub-e010a.firebasestorage.app",
+            messagingSenderId: "48854042250",
+            appId: "1:48854042250:web:b71cc4a22dadb6258c8f73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null;
+        let userData = null;
+        let goals = { protein: 125, calories: 1550, water: 8 };
+        let settings = { meals: false, water: false, weighIn: true };
+        let history = [];
+        let prs = {};
+        let badges = [];
+
+        onAuthStateChanged(auth, async (u) => {
+            if (!u) { window.location.href = 'auth.html'; return; }
+            user = u;
+            await loadData();
+            renderProfile();
+            applyTheme();
+        });
+
+        async function loadData() {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                userData = userDoc.data();
+                goals = userData.goals || goals;
+                settings = userData.notifications || settings;
+            }
+
+            // History
+            const daysSnap = await getDocs(collection(db, 'users', user.uid, 'days'));
+            history = [];
+            daysSnap.forEach(d => history.push(d.data()));
+
+            // PRs
+            const prDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'prs'));
+            prs = prDoc.exists() ? prDoc.data() : {};
+
+            // Badges
+            const badgeDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'badges'));
+            badges = badgeDoc.exists() ? badgeDoc.data().list || [] : [];
+        }
+
+        function renderProfile() {
+            // Avatar
+            document.getElementById('avatar').textContent = userData?.avatar || '👤';
+            
+            // User info
+            document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+            document.getElementById('userEmail').textContent = user.email;
+            
+            if (userData?.createdAt) {
+                const created = new Date(userData.createdAt);
+                document.getElementById('userSince').textContent = 'Member since ' + created.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            }
+
+            // Stats
+            let streak = 0;
+            const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            for (const day of sortedHistory) {
+                if (day.protein >= goals.protein * 0.9) streak++;
+                else break;
+            }
+            
+            document.getElementById('statStreak').textContent = streak;
+            document.getElementById('statDays').textContent = history.filter(h => h.protein > 0).length;
+            document.getElementById('statPRs').textContent = Object.keys(prs).length;
+            document.getElementById('statBadges').textContent = badges.length;
+
+            // Goals preview
+            document.getElementById('goalsPreview').textContent = `${goals.protein}g protein, ${goals.calories} cal, ${goals.water} glasses`;
+            document.getElementById('goalProtein').value = goals.protein;
+            document.getElementById('goalCalories').value = goals.calories;
+            document.getElementById('goalWater').value = goals.water;
+
+            // Cycle
+            if (userData?.trackCycle) {
+                document.getElementById('cycleStatus').textContent = 'On';
+                document.getElementById('toggleCycle').classList.add('active');
+                document.getElementById('cycleFields').style.display = 'block';
+                if (userData.cycleData) {
+                    document.getElementById('cycleStartDate').value = userData.cycleData.startDate || '';
+                    document.getElementById('cycleLength').value = userData.cycleData.length || 28;
+                }
+            }
+
+            // Start date
+            if (userData?.startDate) {
+                document.getElementById('startDateValue').textContent = new Date(userData.startDate).toLocaleDateString();
+                document.getElementById('startDateInput').value = userData.startDate;
+            }
+
+            // Theme
+            const theme = localStorage.getItem('theme') || 'light';
+            document.getElementById('themeValue').textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.toggle('selected', card.classList.contains(theme));
+            });
+
+            // Notifications
+            document.getElementById('toggleMeals').classList.toggle('active', settings.meals);
+            document.getElementById('toggleWater').classList.toggle('active', settings.water);
+            document.getElementById('toggleWeighIn').classList.toggle('active', settings.weighIn);
+        }
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme');
+            if (theme) document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        window.goBack = function() {
+            window.location.href = 'today.html';
+        };
+
+        window.changeAvatar = function() {
+            openModal('avatarModal');
+        };
+        
+        window.selectAvatar = async function(emoji) {
+            await updateDoc(doc(db, 'users', user.uid), { avatar: emoji });
+            userData.avatar = emoji;
+            document.getElementById('avatar').textContent = emoji;
+            closeModal('avatarModal');
+            showToast('✓ Avatar updated!');
+        };
+
+        window.showStatDetail = function(type) {
+            // Navigate to relevant tab in progress
+            window.location.href = 'progress.html';
+        };
+
+        // Goals
+        window.openGoalsModal = function() { openModal('goalsModal'); };
+        
+        window.saveGoals = async function() {
+            goals.protein = parseInt(document.getElementById('goalProtein').value) || 125;
+            goals.calories = parseInt(document.getElementById('goalCalories').value) || 1550;
+            goals.water = parseInt(document.getElementById('goalWater').value) || 8;
+            
+            await updateDoc(doc(db, 'users', user.uid), { goals });
+            closeModal('goalsModal');
+            renderProfile();
+            showToast('✓ Goals saved!');
+        };
+
+        // Cycle
+        window.openCycleSettings = function() { openModal('cycleModal'); };
+        
+        window.toggleCycleTracking = function() {
+            const toggle = document.getElementById('toggleCycle');
+            toggle.classList.toggle('active');
+            document.getElementById('cycleFields').style.display = toggle.classList.contains('active') ? 'block' : 'none';
+        };
+        
+        window.saveCycleSettings = async function() {
+            const trackCycle = document.getElementById('toggleCycle').classList.contains('active');
+            const cycleData = trackCycle ? {
+                startDate: document.getElementById('cycleStartDate').value,
+                length: parseInt(document.getElementById('cycleLength').value) || 28
+            } : null;
+            
+            await updateDoc(doc(db, 'users', user.uid), { trackCycle, cycleData });
+            userData.trackCycle = trackCycle;
+            userData.cycleData = cycleData;
+            closeModal('cycleModal');
+            renderProfile();
+            showToast('✓ Cycle settings saved!');
+        };
+
+        // Theme
+        window.openThemeModal = function() { openModal('themeModal'); };
+        
+        window.setTheme = function(theme) {
+            localStorage.setItem('theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.toggle('selected', card.classList.contains(theme));
+            });
+            document.getElementById('themeValue').textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+            closeModal('themeModal');
+            showToast('✓ Theme changed!');
+        };
+
+        // Start Date
+        window.openStartDateModal = function() { openModal('startDateModal'); };
+        
+        window.saveStartDate = async function() {
+            const startDate = document.getElementById('startDateInput').value;
+            await updateDoc(doc(db, 'users', user.uid), { startDate });
+            userData.startDate = startDate;
+            closeModal('startDateModal');
+            renderProfile();
+            showToast('✓ Start date saved!');
+        };
+
+        // Notifications
+        window.toggleSetting = async function(type) {
+            settings[type] = !settings[type];
+            document.getElementById('toggle' + type.charAt(0).toUpperCase() + type.slice(1)).classList.toggle('active', settings[type]);
+            await updateDoc(doc(db, 'users', user.uid), { notifications: settings });
+            showToast(settings[type] ? '✓ Notifications enabled' : 'Notifications disabled');
+        };
+
+        // Units
+        window.openUnitsModal = function() {
+            document.getElementById('weightUnit').value = userData?.units?.weight || 'kg';
+            document.getElementById('measureUnit').value = userData?.units?.measure || 'cm';
+            openModal('unitsModal');
+        };
+        
+        window.saveUnits = async function() {
+            const units = {
+                weight: document.getElementById('weightUnit').value,
+                measure: document.getElementById('measureUnit').value
+            };
+            await updateDoc(doc(db, 'users', user.uid), { units });
+            userData.units = units;
+            document.getElementById('unitsValue').textContent = units.weight + ' / ' + units.measure;
+            closeModal('unitsModal');
+            showToast('✓ Units saved!');
+        };
+
+        // Export Data
+        window.exportData = async function() {
+            const allData = {
+                user: userData,
+                history,
+                prs,
+                badges,
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nutrition-hub-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✓ Data exported!');
+        };
+
+        // Import Data
+        window.importData = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                if (data.user?.goals) {
+                    await updateDoc(doc(db, 'users', user.uid), { goals: data.user.goals });
+                }
+                if (data.prs) {
+                    await setDoc(doc(db, 'users', user.uid, 'data', 'prs'), data.prs);
+                }
+                if (data.badges) {
+                    await setDoc(doc(db, 'users', user.uid, 'data', 'badges'), { list: data.badges });
+                }
+                
+                showToast('✓ Data imported! Refreshing...');
+                setTimeout(() => location.reload(), 1500);
+            } catch (e) {
+                showToast('Error importing data');
+                console.error(e);
+            }
+        };
+
+        // Sign Out
+        window.signOut = function() { openModal('signOutModal'); };
+        
+        window.confirmSignOut = async function() {
+            await firebaseSignOut(auth);
+            window.location.href = 'auth.html';
+        };
+
+        // Delete Account
+        window.openDeleteAccountModal = function() { openModal('deleteModal'); };
+        
+        window.confirmDeleteAccount = async function() {
+            try {
+                // Delete user data
+                const daysSnap = await getDocs(collection(db, 'users', user.uid, 'days'));
+                for (const d of daysSnap.docs) {
+                    await deleteDoc(d.ref);
+                }
+                
+                const dataSnap = await getDocs(collection(db, 'users', user.uid, 'data'));
+                for (const d of dataSnap.docs) {
+                    await deleteDoc(d.ref);
+                }
+                
+                await deleteDoc(doc(db, 'users', user.uid));
+                await deleteUser(user);
+                
+                window.location.href = 'auth.html';
+            } catch (e) {
+                showToast('Error deleting account. Try signing out and in again.');
+                console.error(e);
+            }
+        };
+
+        // Modal helpers
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('show');
+            document.body.style.overflow = '';
+        };
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal(overlay.id);
+            });
+        });
+
+        // Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>
