@@ -1221,28 +1221,89 @@
         ];
 
         onAuthStateChanged(auth, async (u) => {
+            console.log('[PHASE1] Auth state changed, user:', u?.uid);
             if (!u) { window.location.href = 'auth.html'; return; }
             user = u;
-            await loadAllData();
-            setupRealtimeSync();
-            hideLoading();
-            renderAll();
+            
+            try {
+                await loadAllData();
+                console.log('[PHASE1] After loadAllData:');
+                console.log('[PHASE1] - todayData.sleep:', todayData?.sleep);
+                console.log('[PHASE1] - todayData.protein:', todayData?.protein);
+                console.log('[PHASE1] - history length:', history?.length);
+                
+                setupRealtimeSync();
+                hideLoading();
+                renderAll();
+                
+                console.log('[PHASE1] Initial render complete');
+            } catch (error) {
+                console.error('[PHASE1] ERROR loading data:', error);
+                hideLoading();
+                showToast('Error loading data. Please refresh.');
+            }
         });
 
         async function loadAllData() {
+            console.log('[PHASE1] loadAllData started');
+            
             // User data
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
                 userData = userDoc.data();
                 goals = userData.goals || goals;
+                console.log('[PHASE1] User goals loaded:', goals);
             }
 
-            // Today's data
+            // Today's data - load from Firebase
             const todayDoc = await getDoc(doc(db, 'users', user.uid, 'days', today));
+            console.log('[PHASE1] Today doc exists:', todayDoc.exists());
+            
             if (todayDoc.exists()) {
-                todayData = { ...todayData, ...todayDoc.data() };
+                const firebaseData = todayDoc.data();
+                console.log('[PHASE1] Firebase data:', JSON.stringify(firebaseData));
+                console.log('[PHASE1] Firebase sleep value:', firebaseData.sleep);
+                
+                // Explicitly set each field from Firebase data
+                todayData = {
+                    date: today,
+                    protein: firebaseData.protein || 0,
+                    calories: firebaseData.calories || 0,
+                    water: firebaseData.water || 0,
+                    sleep: firebaseData.sleep || 0,
+                    foods: firebaseData.foods || [],
+                    supplements: firebaseData.supplements || { morning: false, evening: false },
+                    workout: firebaseData.workout || null,
+                    notes: firebaseData.notes || ''
+                };
+                
+                console.log('[PHASE1] todayData.sleep after load:', todayData.sleep);
+            } else {
+                console.log('[PHASE1] No Firebase data for today, checking localStorage');
+                // Check localStorage for backup
+                const localBackup = localStorage.getItem('todayData_' + today);
+                if (localBackup) {
+                    try {
+                        const parsed = JSON.parse(localBackup);
+                        console.log('[PHASE1] localStorage backup found:', parsed);
+                        todayData = {
+                            date: today,
+                            protein: parsed.protein || 0,
+                            calories: parsed.calories || 0,
+                            water: parsed.water || 0,
+                            sleep: parsed.sleep || 0,
+                            foods: parsed.foods || [],
+                            supplements: parsed.supplements || { morning: false, evening: false },
+                            workout: parsed.workout || null,
+                            notes: parsed.notes || ''
+                        };
+                    } catch (e) {
+                        console.error('[PHASE1] Failed to parse localStorage:', e);
+                    }
+                }
             }
-            todayData.date = today;
+            
+            console.log('[PHASE1] Final todayData:', JSON.stringify(todayData));
 
             // Weight
             const weightDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'weight'));
@@ -1266,17 +1327,63 @@
                 supplementSettings = suppDoc.data();
             }
 
-            // History (for streak)
+            // History (for streak and calendar) - CRITICAL for weekly stats
+            console.log('[PHASE1] Loading history...');
             const daysSnap = await getDocs(collection(db, 'users', user.uid, 'days'));
             history = [];
-            daysSnap.forEach(doc => history.push(doc.data()));
+            daysSnap.forEach(d => {
+                const dayData = d.data();
+                history.push(dayData);
+            });
             history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Make sure today's data is in history
+            const todayInHistory = history.find(h => h.date === today);
+            if (!todayInHistory && (todayData.protein > 0 || todayData.foods?.length > 0 || todayData.sleep > 0)) {
+                history.unshift({ ...todayData });
+            } else if (todayInHistory) {
+                // Update history with current todayData
+                const idx = history.findIndex(h => h.date === today);
+                history[idx] = { ...todayData };
+            }
+            
+            console.log('[PHASE1] History loaded:', history.length, 'days');
+            console.log('[PHASE1] loadAllData completed');
         }
 
         function setupRealtimeSync() {
-            onSnapshot(doc(db, 'users', user.uid, 'days', today), (doc) => {
-                if (doc.exists()) {
-                    todayData = { ...todayData, ...doc.data() };
+            console.log('[PHASE1] Setting up realtime sync');
+            onSnapshot(doc(db, 'users', user.uid, 'days', today), (snapshot) => {
+                console.log('[PHASE1] Realtime snapshot received, exists:', snapshot.exists());
+                
+                if (snapshot.exists()) {
+                    const firebaseData = snapshot.data();
+                    console.log('[PHASE1] Realtime data:', JSON.stringify(firebaseData));
+                    console.log('[PHASE1] Realtime sleep:', firebaseData.sleep);
+                    
+                    // Use Firebase data, falling back to current values
+                    todayData = {
+                        date: today,
+                        protein: firebaseData.protein || 0,
+                        calories: firebaseData.calories || 0,
+                        water: firebaseData.water || 0,
+                        sleep: firebaseData.sleep || 0,
+                        foods: firebaseData.foods || [],
+                        supplements: firebaseData.supplements || { morning: false, evening: false },
+                        workout: firebaseData.workout || null,
+                        notes: firebaseData.notes || ''
+                    };
+                    
+                    console.log('[PHASE1] todayData after realtime update:', todayData.sleep);
+                    
+                    // Update history array as well
+                    const historyIndex = history.findIndex(h => h.date === today);
+                    if (historyIndex >= 0) {
+                        history[historyIndex] = { ...todayData };
+                    } else if (todayData.protein > 0 || todayData.foods.length > 0 || todayData.sleep > 0) {
+                        history.unshift({ ...todayData });
+                    }
+                    
                     renderAll();
                 }
                 setSyncStatus('synced');
@@ -1291,7 +1398,25 @@
 
         async function saveToday() {
             setSyncStatus('syncing');
-            await setDoc(doc(db, 'users', user.uid, 'days', today), todayData);
+            console.log('[PHASE1] saveToday called');
+            console.log('[PHASE1] Saving todayData:', JSON.stringify(todayData));
+            console.log('[PHASE1] Sleep value being saved:', todayData.sleep);
+            
+            // Save to localStorage as backup first
+            try {
+                localStorage.setItem('todayData_' + today, JSON.stringify(todayData));
+                console.log('[PHASE1] Saved to localStorage');
+            } catch (e) {
+                console.error('[PHASE1] Failed to save to localStorage:', e);
+            }
+            
+            // Save to Firebase
+            try {
+                await setDoc(doc(db, 'users', user.uid, 'days', today), todayData);
+                console.log('[PHASE1] Saved to Firebase successfully');
+            } catch (e) {
+                console.error('[PHASE1] Failed to save to Firebase:', e);
+            }
             
             // Update history array to keep calendar in sync
             const historyIndex = history.findIndex(h => h.date === today);
@@ -1301,12 +1426,17 @@
                 history.unshift({ ...todayData });
             }
             
+            console.log('[PHASE1] Save completed, history has', history.length, 'days');
             setSyncStatus('synced');
         }
 
         function hideLoading() { document.getElementById('loadingScreen').classList.add('hide'); }
 
         function renderAll() {
+            console.log('[PHASE1] renderAll called');
+            console.log('[PHASE1] - todayData.sleep:', todayData?.sleep);
+            console.log('[PHASE1] - history length:', history?.length);
+            
             renderHeader();
             renderStreak();
             renderRings();
@@ -1324,6 +1454,8 @@
             if (userData?.avatar) {
                 document.getElementById('avatarBtn').textContent = userData.avatar;
             }
+            
+            console.log('[PHASE1] renderAll completed');
         }
 
         function renderHeader() {
@@ -1592,8 +1724,15 @@
         let currentSleepInput = 7;
         
         function renderSleep() {
-            const sleepValue = todayData.sleep || 0;
-            document.getElementById('sleepValue').textContent = sleepValue > 0 ? sleepValue.toFixed(1) : '--';
+            console.log('[PHASE1] renderSleep called');
+            console.log('[PHASE1] - todayData?.sleep:', todayData?.sleep);
+            const sleepValue = Number(todayData?.sleep) || 0;
+            console.log('[PHASE1] - sleepValue after conversion:', sleepValue);
+            const sleepEl = document.getElementById('sleepValue');
+            if (sleepEl) {
+                sleepEl.textContent = sleepValue > 0 ? sleepValue.toFixed(1) : '--';
+                console.log('[PHASE1] - Set sleepEl to:', sleepEl.textContent);
+            }
             currentSleepInput = sleepValue > 0 ? sleepValue : 7;
         }
         
@@ -1608,11 +1747,19 @@
         };
         
         window.saveSleep = async function() {
-            todayData.sleep = currentSleepInput;
+            console.log('[PHASE1] saveSleep called');
+            console.log('[PHASE1] - currentSleepInput:', currentSleepInput);
+            
+            // Ensure it's a number
+            todayData.sleep = Number(currentSleepInput);
+            console.log('[PHASE1] - todayData.sleep set to:', todayData.sleep);
+            console.log('[PHASE1] - Full todayData:', JSON.stringify(todayData));
+            
             await saveToday();
             closeModal('sleepModal');
             renderSleep();
             showToast('✓ Sleep logged!');
+            console.log('[PHASE1] saveSleep completed');
         };
 
         function checkShakeSuggestion() {
@@ -2321,38 +2468,80 @@
         
         // ========== WEEKLY SUMMARY ==========
         function renderWeeklyMiniStats() {
-            const weekData = getWeekData();
+            console.log('[PHASE1] renderWeeklyMiniStats called');
+            console.log('[PHASE1] - todayData:', todayData?.protein, 'protein,', todayData?.sleep, 'sleep');
+            console.log('[PHASE1] - history length:', history?.length || 0);
             
-            // Filter to days with actual data
-            const daysWithData = weekData.filter(d => d.protein > 0);
+            const weekData = getWeekData();
+            console.log('[PHASE1] - weekData:', weekData.map(d => ({ date: d.date, protein: d.protein })));
+            
+            // Filter to days with actual data (protein > 0 or has foods)
+            const daysWithData = weekData.filter(d => (d.protein && d.protein > 0) || (d.foods && d.foods.length > 0));
+            console.log('[PHASE1] - daysWithData:', daysWithData.length);
             
             // Calculate averages based on days with data, not all 7 days
             const avgProtein = daysWithData.length > 0 
-                ? Math.round(daysWithData.reduce((sum, d) => sum + d.protein, 0) / daysWithData.length) 
+                ? Math.round(daysWithData.reduce((sum, d) => sum + (d.protein || 0), 0) / daysWithData.length) 
                 : 0;
             const workoutCount = weekData.filter(d => d.workout && d.workout.completed).length;
-            const goalDays = daysWithData.filter(d => d.protein >= (goals?.protein || 125) - 200).length;
+            const proteinGoal = goals?.protein || 125;
+            const goalDays = daysWithData.filter(d => (d.protein || 0) >= proteinGoal - 200).length;
             
-            document.getElementById('weeklyAvgProtein').textContent = avgProtein > 0 ? avgProtein + 'g' : '--';
-            document.getElementById('weeklyWorkouts').textContent = workoutCount;
-            document.getElementById('weeklyGoalDays').textContent = daysWithData.length > 0 ? goalDays + '/' + daysWithData.length : '--';
+            const avgEl = document.getElementById('weeklyAvgProtein');
+            const workoutsEl = document.getElementById('weeklyWorkouts');
+            const goalsEl = document.getElementById('weeklyGoalDays');
+            
+            if (avgEl) avgEl.textContent = avgProtein > 0 ? avgProtein + 'g' : '--';
+            if (workoutsEl) workoutsEl.textContent = workoutCount.toString();
+            if (goalsEl) goalsEl.textContent = daysWithData.length > 0 ? goalDays + '/' + daysWithData.length : '--';
+            
+            console.log('[PHASE1] Weekly stats rendered:', { avgProtein, workoutCount, goalDays, daysWithData: daysWithData.length });
         }
         
         function getWeekData() {
             const weekData = [];
-            const todayDate = new Date();
+            const now = new Date();
             
             for (let i = 6; i >= 0; i--) {
-                const date = new Date(todayDate);
+                const date = new Date(now);
                 date.setDate(date.getDate() - i);
                 const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                 
                 if (dateStr === today) {
-                    weekData.push({ ...todayData, date: dateStr });
+                    // For today, use current todayData with defaults
+                    weekData.push({ 
+                        date: dateStr,
+                        protein: todayData?.protein || 0,
+                        calories: todayData?.calories || 0,
+                        sleep: todayData?.sleep || 0,
+                        foods: todayData?.foods || [],
+                        workout: todayData?.workout || null,
+                        supplements: todayData?.supplements || { morning: false, evening: false }
+                    });
                 } else {
-                    const dayData = history.find(h => h.date === dateStr);
-                    if (dayData) weekData.push(dayData);
-                    else weekData.push({ date: dateStr, protein: 0, calories: 0 });
+                    // For past days, search in history
+                    const dayData = history?.find(h => h.date === dateStr);
+                    if (dayData) {
+                        weekData.push({
+                            date: dateStr,
+                            protein: dayData.protein || 0,
+                            calories: dayData.calories || 0,
+                            sleep: dayData.sleep || 0,
+                            foods: dayData.foods || [],
+                            workout: dayData.workout || null,
+                            supplements: dayData.supplements || { morning: false, evening: false }
+                        });
+                    } else {
+                        weekData.push({ 
+                            date: dateStr, 
+                            protein: 0, 
+                            calories: 0, 
+                            sleep: 0,
+                            foods: [],
+                            workout: null,
+                            supplements: { morning: false, evening: false }
+                        });
+                    }
                 }
             }
             return weekData;
