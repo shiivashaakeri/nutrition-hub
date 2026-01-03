@@ -283,9 +283,34 @@
         .food-modal-item .info { flex: 1; }
         .food-modal-item .info h4 { font-size: 0.92rem; font-weight: 600; }
         .food-modal-item .info p { font-size: 0.75rem; color: var(--text-muted); }
-        .food-search { width: 100%; padding: 16px 18px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-size: 0.95rem; margin-bottom: 18px; font-family: inherit; color: var(--text); transition: all 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); }
+        .food-search { width: 100%; padding: 16px 18px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-size: 0.95rem; margin-bottom: 12px; font-family: inherit; color: var(--text); transition: all 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); }
         .food-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); transform: translateY(-1px); }
         .food-category { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin: 20px 0 12px; letter-spacing: 0.5px; }
+        
+        /* Food Category Buttons */
+        .food-categories { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+        .food-cat-btn { padding: 8px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .food-cat-btn:hover { border-color: var(--accent); }
+        .food-cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        /* Gram Entry Modal */
+        .gram-entry { padding: 20px 0; }
+        .gram-input-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
+        .gram-btn { width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-card); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text); transition: all 0.2s; }
+        .gram-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+        .gram-btn:active { transform: scale(0.95); }
+        .gram-value { text-align: center; }
+        .gram-value input { width: 80px; padding: 12px; border: 2px solid var(--accent); border-radius: 12px; font-size: 1.5rem; font-weight: 700; text-align: center; background: var(--bg-secondary); color: var(--accent); font-family: var(--font-display); }
+        .gram-value input:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-light); }
+        .gram-value span { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .gram-presets { display: flex; justify-content: center; gap: 10px; }
+        .gram-presets button { padding: 10px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .gram-presets button:hover { border-color: var(--accent); }
+        .gram-presets button.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .gram-calc-result { display: flex; justify-content: center; gap: 40px; padding: 24px; background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.15)); border-radius: 16px; margin: 20px 0; }
+        .calc-item { text-align: center; }
+        .calc-value { font-family: var(--font-display); font-size: 2rem; font-weight: 400; color: var(--accent); }
+        .calc-label { font-size: 0.8rem; color: var(--text-muted); }
         
         /* Edit Food Modal - Enhanced */
         .portion-control { display: flex; align-items: center; justify-content: center; gap: 24px; margin: 28px 0; }
@@ -505,14 +530,64 @@
     
     <!-- Add Food Modal -->
     <div class="modal-overlay" id="addFoodModal">
-        <div class="modal">
+        <div class="modal" style="max-height:90vh;">
             <div class="modal-handle"></div>
             <div class="modal-header">
                 <h3>Add Food</h3>
                 <button class="modal-close" onclick="closeModal('addFoodModal')">✕</button>
             </div>
-            <input type="text" class="food-search" placeholder="🔍 Search foods..." id="foodSearch" oninput="filterFoods()">
-            <div id="foodModalContent"></div>
+            <input type="text" class="food-search" placeholder="🔍 Search 150+ foods..." id="foodSearch" oninput="filterFoods()">
+            <div class="food-categories" id="foodCategories">
+                <button class="food-cat-btn active" onclick="setFoodCategory('all')">All</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('proteins')">🥩 Protein</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('dairy')">🥛 Dairy</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('carbs')">🍚 Carbs</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('vegetables')">🥦 Veggies</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('fruits')">🍎 Fruits</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('nuts')">🥜 Nuts</button>
+                <button class="food-cat-btn" onclick="setFoodCategory('legumes')">🫘 Legumes</button>
+            </div>
+            <div id="foodModalContent" style="max-height:50vh; overflow-y:auto;"></div>
+        </div>
+    </div>
+    
+    <!-- Food Gram Entry Modal -->
+    <div class="modal-overlay" id="foodGramModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 id="gramFoodName">Chicken Breast</h3>
+                <button class="modal-close" onclick="closeModal('foodGramModal')">✕</button>
+            </div>
+            <div class="gram-entry">
+                <div class="gram-input-row">
+                    <button class="gram-btn" onclick="adjustGrams(-50)">−50</button>
+                    <button class="gram-btn" onclick="adjustGrams(-10)">−10</button>
+                    <div class="gram-value">
+                        <input type="number" id="gramInput" value="100" onchange="updateGramCalc()">
+                        <span>grams</span>
+                    </div>
+                    <button class="gram-btn" onclick="adjustGrams(10)">+10</button>
+                    <button class="gram-btn" onclick="adjustGrams(50)">+50</button>
+                </div>
+                <div class="gram-presets">
+                    <button onclick="setGrams(50)">50g</button>
+                    <button onclick="setGrams(100)" class="active">100g</button>
+                    <button onclick="setGrams(150)">150g</button>
+                    <button onclick="setGrams(200)">200g</button>
+                </div>
+            </div>
+            <div class="gram-calc-result">
+                <div class="calc-item">
+                    <div class="calc-value" id="calcProtein">31g</div>
+                    <div class="calc-label">Protein</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-value" id="calcCalories">165</div>
+                    <div class="calc-label">Calories</div>
+                </div>
+            </div>
+            <button class="btn btn-save" style="width:100%;" onclick="addFoodWithGrams()">Add to Today</button>
         </div>
     </div>
     
@@ -743,7 +818,181 @@
         const todayDate = new Date();
         const today = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + String(todayDate.getDate()).padStart(2, '0');
 
-        // Default foods for quick add
+        // Comprehensive food database (per 100g values)
+        const foodDatabase = {
+            // ===== PROTEINS =====
+            proteins: [
+                { name: 'Chicken Breast', emoji: '🍗', proteinPer100g: 31, caloriesPer100g: 165 },
+                { name: 'Chicken Thigh', emoji: '🍗', proteinPer100g: 26, caloriesPer100g: 209 },
+                { name: 'Ground Chicken', emoji: '🍗', proteinPer100g: 17, caloriesPer100g: 143 },
+                { name: 'Turkey Breast', emoji: '🦃', proteinPer100g: 29, caloriesPer100g: 135 },
+                { name: 'Ground Turkey', emoji: '🦃', proteinPer100g: 27, caloriesPer100g: 149 },
+                { name: 'Beef Steak', emoji: '🥩', proteinPer100g: 26, caloriesPer100g: 271 },
+                { name: 'Ground Beef (lean)', emoji: '🥩', proteinPer100g: 26, caloriesPer100g: 250 },
+                { name: 'Ground Beef (regular)', emoji: '🥩', proteinPer100g: 17, caloriesPer100g: 332 },
+                { name: 'Pork Tenderloin', emoji: '🥓', proteinPer100g: 26, caloriesPer100g: 143 },
+                { name: 'Pork Chop', emoji: '🥓', proteinPer100g: 25, caloriesPer100g: 231 },
+                { name: 'Bacon', emoji: '🥓', proteinPer100g: 37, caloriesPer100g: 541 },
+                { name: 'Lamb', emoji: '🍖', proteinPer100g: 25, caloriesPer100g: 294 },
+                { name: 'Salmon', emoji: '🐟', proteinPer100g: 25, caloriesPer100g: 208 },
+                { name: 'Tuna', emoji: '🐟', proteinPer100g: 29, caloriesPer100g: 132 },
+                { name: 'Cod', emoji: '🐟', proteinPer100g: 18, caloriesPer100g: 82 },
+                { name: 'Tilapia', emoji: '🐟', proteinPer100g: 26, caloriesPer100g: 128 },
+                { name: 'Shrimp', emoji: '🦐', proteinPer100g: 24, caloriesPer100g: 99 },
+                { name: 'Crab', emoji: '🦀', proteinPer100g: 18, caloriesPer100g: 83 },
+                { name: 'Lobster', emoji: '🦞', proteinPer100g: 19, caloriesPer100g: 89 },
+                { name: 'Tofu (firm)', emoji: '🫘', proteinPer100g: 8, caloriesPer100g: 76 },
+                { name: 'Tempeh', emoji: '🫘', proteinPer100g: 19, caloriesPer100g: 193 },
+                { name: 'Seitan', emoji: '🫘', proteinPer100g: 25, caloriesPer100g: 370 },
+            ],
+            // ===== EGGS & DAIRY =====
+            dairy: [
+                { name: 'Whole Egg', emoji: '🥚', proteinPer100g: 13, caloriesPer100g: 155, defaultGrams: 50 },
+                { name: 'Egg White', emoji: '🥚', proteinPer100g: 11, caloriesPer100g: 52, defaultGrams: 33 },
+                { name: 'Greek Yogurt', emoji: '🥛', proteinPer100g: 10, caloriesPer100g: 59 },
+                { name: 'Regular Yogurt', emoji: '🥛', proteinPer100g: 5, caloriesPer100g: 61 },
+                { name: 'Cottage Cheese', emoji: '🧀', proteinPer100g: 11, caloriesPer100g: 98 },
+                { name: 'Milk (whole)', emoji: '🥛', proteinPer100g: 3, caloriesPer100g: 61 },
+                { name: 'Milk (skim)', emoji: '🥛', proteinPer100g: 3, caloriesPer100g: 34 },
+                { name: 'Cheddar Cheese', emoji: '🧀', proteinPer100g: 25, caloriesPer100g: 403 },
+                { name: 'Mozzarella', emoji: '🧀', proteinPer100g: 22, caloriesPer100g: 280 },
+                { name: 'Parmesan', emoji: '🧀', proteinPer100g: 38, caloriesPer100g: 431 },
+                { name: 'Feta Cheese', emoji: '🧀', proteinPer100g: 14, caloriesPer100g: 264 },
+                { name: 'Cream Cheese', emoji: '🧀', proteinPer100g: 6, caloriesPer100g: 342 },
+            ],
+            // ===== CARBS & GRAINS =====
+            carbs: [
+                { name: 'White Rice (cooked)', emoji: '🍚', proteinPer100g: 3, caloriesPer100g: 130 },
+                { name: 'Brown Rice (cooked)', emoji: '🍚', proteinPer100g: 3, caloriesPer100g: 112 },
+                { name: 'Quinoa (cooked)', emoji: '🫓', proteinPer100g: 4, caloriesPer100g: 120 },
+                { name: 'Pasta (cooked)', emoji: '🍝', proteinPer100g: 5, caloriesPer100g: 131 },
+                { name: 'Bread (white)', emoji: '🍞', proteinPer100g: 9, caloriesPer100g: 265 },
+                { name: 'Bread (whole wheat)', emoji: '🍞', proteinPer100g: 13, caloriesPer100g: 247 },
+                { name: 'Oatmeal (cooked)', emoji: '🥣', proteinPer100g: 2, caloriesPer100g: 71 },
+                { name: 'Oats (dry)', emoji: '🥣', proteinPer100g: 17, caloriesPer100g: 389 },
+                { name: 'Potato', emoji: '🥔', proteinPer100g: 2, caloriesPer100g: 77 },
+                { name: 'Sweet Potato', emoji: '🍠', proteinPer100g: 2, caloriesPer100g: 86 },
+                { name: 'Corn', emoji: '🌽', proteinPer100g: 3, caloriesPer100g: 86 },
+                { name: 'Tortilla (flour)', emoji: '🫓', proteinPer100g: 8, caloriesPer100g: 312 },
+                { name: 'Bagel', emoji: '🥯', proteinPer100g: 10, caloriesPer100g: 257 },
+                { name: 'Couscous', emoji: '🫓', proteinPer100g: 4, caloriesPer100g: 112 },
+            ],
+            // ===== VEGETABLES =====
+            vegetables: [
+                { name: 'Broccoli', emoji: '🥦', proteinPer100g: 3, caloriesPer100g: 34 },
+                { name: 'Spinach', emoji: '🥬', proteinPer100g: 3, caloriesPer100g: 23 },
+                { name: 'Kale', emoji: '🥬', proteinPer100g: 4, caloriesPer100g: 49 },
+                { name: 'Lettuce', emoji: '🥬', proteinPer100g: 1, caloriesPer100g: 15 },
+                { name: 'Carrots', emoji: '🥕', proteinPer100g: 1, caloriesPer100g: 41 },
+                { name: 'Bell Pepper', emoji: '🫑', proteinPer100g: 1, caloriesPer100g: 31 },
+                { name: 'Tomato', emoji: '🍅', proteinPer100g: 1, caloriesPer100g: 18 },
+                { name: 'Cucumber', emoji: '🥒', proteinPer100g: 1, caloriesPer100g: 16 },
+                { name: 'Zucchini', emoji: '🥒', proteinPer100g: 1, caloriesPer100g: 17 },
+                { name: 'Mushrooms', emoji: '🍄', proteinPer100g: 3, caloriesPer100g: 22 },
+                { name: 'Asparagus', emoji: '🌿', proteinPer100g: 2, caloriesPer100g: 20 },
+                { name: 'Green Beans', emoji: '🫛', proteinPer100g: 2, caloriesPer100g: 31 },
+                { name: 'Cauliflower', emoji: '🥦', proteinPer100g: 2, caloriesPer100g: 25 },
+                { name: 'Brussels Sprouts', emoji: '🥬', proteinPer100g: 3, caloriesPer100g: 43 },
+                { name: 'Cabbage', emoji: '🥬', proteinPer100g: 1, caloriesPer100g: 25 },
+                { name: 'Onion', emoji: '🧅', proteinPer100g: 1, caloriesPer100g: 40 },
+                { name: 'Garlic', emoji: '🧄', proteinPer100g: 6, caloriesPer100g: 149 },
+                { name: 'Celery', emoji: '🥬', proteinPer100g: 1, caloriesPer100g: 16 },
+                { name: 'Eggplant', emoji: '🍆', proteinPer100g: 1, caloriesPer100g: 25 },
+                { name: 'Peas', emoji: '🫛', proteinPer100g: 5, caloriesPer100g: 81 },
+                { name: 'Edamame', emoji: '🫛', proteinPer100g: 11, caloriesPer100g: 121 },
+                { name: 'Avocado', emoji: '🥑', proteinPer100g: 2, caloriesPer100g: 160 },
+            ],
+            // ===== FRUITS =====
+            fruits: [
+                { name: 'Apple', emoji: '🍎', proteinPer100g: 0, caloriesPer100g: 52 },
+                { name: 'Banana', emoji: '🍌', proteinPer100g: 1, caloriesPer100g: 89 },
+                { name: 'Orange', emoji: '🍊', proteinPer100g: 1, caloriesPer100g: 47 },
+                { name: 'Strawberries', emoji: '🍓', proteinPer100g: 1, caloriesPer100g: 32 },
+                { name: 'Blueberries', emoji: '🫐', proteinPer100g: 1, caloriesPer100g: 57 },
+                { name: 'Raspberries', emoji: '🍇', proteinPer100g: 1, caloriesPer100g: 52 },
+                { name: 'Grapes', emoji: '🍇', proteinPer100g: 1, caloriesPer100g: 69 },
+                { name: 'Watermelon', emoji: '🍉', proteinPer100g: 1, caloriesPer100g: 30 },
+                { name: 'Pineapple', emoji: '🍍', proteinPer100g: 1, caloriesPer100g: 50 },
+                { name: 'Mango', emoji: '🥭', proteinPer100g: 1, caloriesPer100g: 60 },
+                { name: 'Peach', emoji: '🍑', proteinPer100g: 1, caloriesPer100g: 39 },
+                { name: 'Pear', emoji: '🍐', proteinPer100g: 0, caloriesPer100g: 57 },
+                { name: 'Kiwi', emoji: '🥝', proteinPer100g: 1, caloriesPer100g: 61 },
+                { name: 'Cherries', emoji: '🍒', proteinPer100g: 1, caloriesPer100g: 50 },
+                { name: 'Lemon', emoji: '🍋', proteinPer100g: 1, caloriesPer100g: 29 },
+                { name: 'Grapefruit', emoji: '🍊', proteinPer100g: 1, caloriesPer100g: 42 },
+                { name: 'Papaya', emoji: '🍈', proteinPer100g: 0, caloriesPer100g: 43 },
+                { name: 'Cantaloupe', emoji: '🍈', proteinPer100g: 1, caloriesPer100g: 34 },
+                { name: 'Honeydew', emoji: '🍈', proteinPer100g: 1, caloriesPer100g: 36 },
+                { name: 'Plum', emoji: '🍑', proteinPer100g: 1, caloriesPer100g: 46 },
+                { name: 'Pomegranate', emoji: '🍎', proteinPer100g: 2, caloriesPer100g: 83 },
+                { name: 'Coconut', emoji: '🥥', proteinPer100g: 3, caloriesPer100g: 354 },
+                { name: 'Dates', emoji: '🌴', proteinPer100g: 2, caloriesPer100g: 277 },
+            ],
+            // ===== NUTS & SEEDS =====
+            nuts: [
+                { name: 'Almonds', emoji: '🥜', proteinPer100g: 21, caloriesPer100g: 579 },
+                { name: 'Peanuts', emoji: '🥜', proteinPer100g: 26, caloriesPer100g: 567 },
+                { name: 'Cashews', emoji: '🥜', proteinPer100g: 18, caloriesPer100g: 553 },
+                { name: 'Walnuts', emoji: '🥜', proteinPer100g: 15, caloriesPer100g: 654 },
+                { name: 'Pistachios', emoji: '🥜', proteinPer100g: 20, caloriesPer100g: 560 },
+                { name: 'Pecans', emoji: '🥜', proteinPer100g: 9, caloriesPer100g: 691 },
+                { name: 'Macadamia', emoji: '🥜', proteinPer100g: 8, caloriesPer100g: 718 },
+                { name: 'Peanut Butter', emoji: '🥜', proteinPer100g: 25, caloriesPer100g: 588 },
+                { name: 'Almond Butter', emoji: '🥜', proteinPer100g: 21, caloriesPer100g: 614 },
+                { name: 'Chia Seeds', emoji: '🌱', proteinPer100g: 17, caloriesPer100g: 486 },
+                { name: 'Flax Seeds', emoji: '🌱', proteinPer100g: 18, caloriesPer100g: 534 },
+                { name: 'Sunflower Seeds', emoji: '🌻', proteinPer100g: 21, caloriesPer100g: 584 },
+                { name: 'Pumpkin Seeds', emoji: '🎃', proteinPer100g: 19, caloriesPer100g: 446 },
+            ],
+            // ===== LEGUMES =====
+            legumes: [
+                { name: 'Black Beans', emoji: '🫘', proteinPer100g: 9, caloriesPer100g: 132 },
+                { name: 'Chickpeas', emoji: '🫘', proteinPer100g: 9, caloriesPer100g: 164 },
+                { name: 'Lentils', emoji: '🫘', proteinPer100g: 9, caloriesPer100g: 116 },
+                { name: 'Kidney Beans', emoji: '🫘', proteinPer100g: 9, caloriesPer100g: 127 },
+                { name: 'Navy Beans', emoji: '🫘', proteinPer100g: 8, caloriesPer100g: 140 },
+                { name: 'Hummus', emoji: '🫘', proteinPer100g: 8, caloriesPer100g: 166 },
+            ],
+            // ===== SUPPLEMENTS & QUICK =====
+            supplements: [
+                { name: 'Whey Protein', emoji: '🥤', proteinPer100g: 80, caloriesPer100g: 400, defaultGrams: 30 },
+                { name: 'Casein Protein', emoji: '🥤', proteinPer100g: 80, caloriesPer100g: 370, defaultGrams: 30 },
+                { name: 'Plant Protein', emoji: '🥤', proteinPer100g: 70, caloriesPer100g: 380, defaultGrams: 30 },
+                { name: 'Protein Bar', emoji: '🍫', proteinPer100g: 33, caloriesPer100g: 350, defaultGrams: 60 },
+                { name: 'Creatine', emoji: '💊', proteinPer100g: 0, caloriesPer100g: 0, defaultGrams: 5 },
+            ],
+            // ===== OILS & FATS =====
+            fats: [
+                { name: 'Olive Oil', emoji: '🫒', proteinPer100g: 0, caloriesPer100g: 884 },
+                { name: 'Coconut Oil', emoji: '🥥', proteinPer100g: 0, caloriesPer100g: 862 },
+                { name: 'Butter', emoji: '🧈', proteinPer100g: 1, caloriesPer100g: 717 },
+                { name: 'Ghee', emoji: '🧈', proteinPer100g: 0, caloriesPer100g: 900 },
+            ],
+            // ===== PREPARED/COMMON MEALS =====
+            meals: [
+                { name: 'Mush Overnight Oats', emoji: '🥣', proteinPer100g: 10, caloriesPer100g: 200, defaultGrams: 150 },
+                { name: 'Rice & Chicken Bowl', emoji: '🍚', proteinPer100g: 12, caloriesPer100g: 150, defaultGrams: 300 },
+                { name: 'Salad (mixed)', emoji: '🥗', proteinPer100g: 2, caloriesPer100g: 20, defaultGrams: 200 },
+                { name: 'Burrito Bowl', emoji: '🌯', proteinPer100g: 8, caloriesPer100g: 140, defaultGrams: 400 },
+                { name: 'Sushi Roll', emoji: '🍣', proteinPer100g: 6, caloriesPer100g: 150, defaultGrams: 200 },
+            ],
+        };
+        
+        // Flatten for search
+        const allFoods = [
+            ...foodDatabase.proteins,
+            ...foodDatabase.dairy,
+            ...foodDatabase.carbs,
+            ...foodDatabase.vegetables,
+            ...foodDatabase.fruits,
+            ...foodDatabase.nuts,
+            ...foodDatabase.legumes,
+            ...foodDatabase.supplements,
+            ...foodDatabase.fats,
+            ...foodDatabase.meals,
+        ];
+        
+        // Legacy default foods for compatibility
         const defaultFoods = [
             { name: 'Protein Shake', protein: 24, calories: 120, emoji: '🥤' },
             { name: 'Mush Overnight Oats', protein: 15, calories: 300, emoji: '🥣' },
@@ -1179,20 +1428,31 @@
         // Modal Functions
         window.openAddFoodModal = function() {
             document.getElementById('foodSearch').value = '';
+            currentFoodCategory = 'all';
             renderFoodModalContent();
             openModal('addFoodModal');
         };
+        
+        let currentFoodCategory = 'all';
+        let selectedFoodForGrams = null;
+        let currentGrams = 100;
 
         function renderFoodModalContent(filter = '') {
             const container = document.getElementById('foodModalContent');
             const filterLower = filter.toLowerCase();
             
+            // Update category button states
+            document.querySelectorAll('.food-cat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(currentFoodCategory) || 
+                    (currentFoodCategory === 'all' && btn.textContent === 'All'));
+            });
+            
             let html = '';
             
-            // Recent foods
-            if (recentFoods.length > 0 && !filter) {
+            // Recent foods (only show when no filter and category is 'all')
+            if (recentFoods.length > 0 && !filter && currentFoodCategory === 'all') {
                 html += '<div class="food-category">Recent</div>';
-                html += recentFoods.slice(0, 5).map(f => `
+                html += recentFoods.slice(0, 3).map(f => `
                     <div class="food-modal-item" onclick="quickAddFood(${JSON.stringify(f).replace(/"/g, '&quot;')})">
                         <span class="emoji">${f.emoji || '🍽️'}</span>
                         <div class="info"><h4>${f.name}</h4><p>${f.protein}g protein • ${f.calories} cal</p></div>
@@ -1200,37 +1460,148 @@
                 `).join('');
             }
             
-            // Quick adds
-            const filteredDefaults = defaultFoods.filter(f => !filter || f.name.toLowerCase().includes(filterLower));
-            if (filteredDefaults.length > 0) {
-                html += '<div class="food-category">Quick Add</div>';
-                html += filteredDefaults.map(f => `
-                    <div class="food-modal-item" onclick="quickAddFood(${JSON.stringify(f).replace(/"/g, '&quot;')})">
-                        <span class="emoji">${f.emoji}</span>
-                        <div class="info"><h4>${f.name}</h4><p>${f.protein}g protein • ${f.calories} cal</p></div>
-                    </div>
-                `).join('');
+            // Get foods based on category
+            let foodsToShow = [];
+            if (currentFoodCategory === 'all') {
+                foodsToShow = allFoods;
+            } else if (foodDatabase[currentFoodCategory]) {
+                foodsToShow = foodDatabase[currentFoodCategory];
             }
             
-            // Custom entry
+            // Filter foods
+            const filteredFoods = foodsToShow.filter(f => 
+                !filter || f.name.toLowerCase().includes(filterLower)
+            );
+            
+            // Show foods
+            if (filteredFoods.length > 0) {
+                const categoryName = currentFoodCategory === 'all' ? 'All Foods' : 
+                    currentFoodCategory.charAt(0).toUpperCase() + currentFoodCategory.slice(1);
+                html += `<div class="food-category">${categoryName} (${filteredFoods.length})</div>`;
+                
+                // Limit display for performance
+                const displayFoods = filter ? filteredFoods : filteredFoods.slice(0, 30);
+                
+                html += displayFoods.map(f => `
+                    <div class="food-modal-item" onclick="openGramEntry(${JSON.stringify(f).replace(/"/g, '&quot;')})">
+                        <span class="emoji">${f.emoji}</span>
+                        <div class="info">
+                            <h4>${f.name}</h4>
+                            <p>${f.proteinPer100g}g protein • ${f.caloriesPer100g} cal per 100g</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (!filter && filteredFoods.length > 30) {
+                    html += `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.85rem;">Search to see more foods...</div>`;
+                }
+            }
+            
+            // Custom entry option
             html += '<div class="food-category">Other</div>';
             html += `
                 <div class="food-modal-item" onclick="openCustomFoodEntry()">
                     <span class="emoji">✏️</span>
                     <div class="info"><h4>Custom Entry</h4><p>Enter macros manually</p></div>
                 </div>
-                <div class="food-modal-item" onclick="openBarcodeScanner()">
-                    <span class="emoji">📷</span>
-                    <div class="info"><h4>Scan Barcode</h4><p>Scan packaged food</p></div>
-                </div>
             `;
             
             container.innerHTML = html;
         }
+        
+        window.setFoodCategory = function(category) {
+            currentFoodCategory = category;
+            renderFoodModalContent(document.getElementById('foodSearch').value);
+        };
 
         window.filterFoods = function() {
             const filter = document.getElementById('foodSearch').value;
             renderFoodModalContent(filter);
+        };
+        
+        window.openGramEntry = function(food) {
+            selectedFoodForGrams = food;
+            currentGrams = food.defaultGrams || 100;
+            
+            document.getElementById('gramFoodName').textContent = food.emoji + ' ' + food.name;
+            document.getElementById('gramInput').value = currentGrams;
+            updateGramCalc();
+            
+            // Update preset buttons
+            document.querySelectorAll('.gram-presets button').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === currentGrams);
+            });
+            
+            closeModal('addFoodModal');
+            openModal('foodGramModal');
+        };
+        
+        window.adjustGrams = function(delta) {
+            currentGrams = Math.max(1, currentGrams + delta);
+            document.getElementById('gramInput').value = currentGrams;
+            updateGramCalc();
+            updateGramPresetButtons();
+        };
+        
+        window.setGrams = function(grams) {
+            currentGrams = grams;
+            document.getElementById('gramInput').value = grams;
+            updateGramCalc();
+            updateGramPresetButtons();
+        };
+        
+        window.updateGramCalc = function() {
+            currentGrams = parseInt(document.getElementById('gramInput').value) || 100;
+            if (!selectedFoodForGrams) return;
+            
+            const protein = Math.round((selectedFoodForGrams.proteinPer100g * currentGrams) / 100);
+            const calories = Math.round((selectedFoodForGrams.caloriesPer100g * currentGrams) / 100);
+            
+            document.getElementById('calcProtein').textContent = protein + 'g';
+            document.getElementById('calcCalories').textContent = calories;
+        };
+        
+        function updateGramPresetButtons() {
+            document.querySelectorAll('.gram-presets button').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === currentGrams);
+            });
+        }
+        
+        window.addFoodWithGrams = async function() {
+            if (!selectedFoodForGrams) return;
+            
+            const protein = Math.round((selectedFoodForGrams.proteinPer100g * currentGrams) / 100);
+            const calories = Math.round((selectedFoodForGrams.caloriesPer100g * currentGrams) / 100);
+            
+            const food = {
+                name: `${selectedFoodForGrams.name} (${currentGrams}g)`,
+                emoji: selectedFoodForGrams.emoji,
+                protein: protein,
+                calories: calories,
+                grams: currentGrams
+            };
+            
+            todayData.foods.push({ ...food, portion: 1 });
+            todayData.protein += protein;
+            todayData.calories += calories;
+            
+            // Add to recent foods (store the base food for re-use)
+            const recentFood = { 
+                name: selectedFoodForGrams.name, 
+                emoji: selectedFoodForGrams.emoji, 
+                protein: protein, 
+                calories: calories 
+            };
+            const existing = recentFoods.findIndex(f => f.name === selectedFoodForGrams.name);
+            if (existing > -1) recentFoods.splice(existing, 1);
+            recentFoods.unshift(recentFood);
+            recentFoods = recentFoods.slice(0, 10);
+            await setDoc(doc(db, 'users', user.uid, 'data', 'recentFoods'), { list: recentFoods });
+            
+            closeModal('foodGramModal');
+            renderAll();
+            await saveToday();
+            showToast('✓ ' + food.name + ' added!');
         };
 
         window.quickAddFood = async function(food) {

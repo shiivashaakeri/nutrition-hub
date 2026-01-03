@@ -195,6 +195,28 @@
         
         /* Confetti */
         .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        
+        /* Workout Detail Modal */
+        .workout-detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.15)); border-radius: 16px; }
+        .workout-detail-header .icon { font-size: 2rem; }
+        .workout-detail-header .info h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+        .workout-detail-header .info p { font-size: 0.85rem; color: var(--text-muted); }
+        .workout-detail-section { margin-bottom: 20px; }
+        .workout-detail-section h5 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .exercise-detail-card { background: var(--bg-secondary); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+        .exercise-detail-card .exercise-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .exercise-detail-card .exercise-name .pr-badge { background: linear-gradient(135deg, #ffd700, #ffb347); color: #333; padding: 2px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; }
+        .sets-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .set-chip { padding: 8px 12px; background: var(--bg-card); border-radius: 10px; font-size: 0.82rem; border: 1px solid var(--border); }
+        .set-chip .weight { font-weight: 700; color: var(--accent); }
+        .cardio-detail { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-secondary); border-radius: 14px; }
+        .cardio-detail .icon { font-size: 1.5rem; }
+        .cardio-detail .info { flex: 1; }
+        .cardio-detail .info h4 { font-size: 0.95rem; font-weight: 600; }
+        .cardio-detail .info p { font-size: 0.8rem; color: var(--text-muted); }
+        .notes-box { padding: 14px; background: var(--bg-secondary); border-radius: 14px; font-size: 0.9rem; font-style: italic; color: var(--text-secondary); }
+        .delete-workout-btn { width: 100%; padding: 16px; background: rgba(229,57,53,0.1); color: var(--error); border: none; border-radius: 14px; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 20px; transition: all 0.2s; }
+        .delete-workout-btn:hover { background: rgba(229,57,53,0.2); }
     </style>
 </head>
 <body>
@@ -260,6 +282,21 @@
                 </div>
             </div>
             <button class="save-set-btn" onclick="saveSet()">Save Set</button>
+        </div>
+    </div>
+    
+    <!-- Workout Detail Modal -->
+    <div class="modal-bottom" id="workoutDetailModal">
+        <div class="modal-sheet" style="max-height:85vh;">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3 id="workoutDetailTitle">Workout Details</h3>
+                <button class="modal-close" onclick="closeModal('workoutDetailModal')">✕</button>
+            </div>
+            <div style="padding:0 24px 24px; overflow-y:auto; max-height:60vh;">
+                <div id="workoutDetailContent"></div>
+                <button class="delete-workout-btn" onclick="deleteWorkoutFromHistory()">🗑️ Delete This Workout</button>
+            </div>
         </div>
     </div>
 
@@ -449,13 +486,14 @@
                             <h3>No workouts yet</h3>
                             <p>Start your first workout above!</p>
                         </div>
-                    ` : workoutHistory.slice(0, 5).map(w => `
-                        <div class="history-item">
+                    ` : workoutHistory.slice(0, 5).map((w, idx) => `
+                        <div class="history-item" onclick="openWorkoutDetail(${idx})">
                             <span class="icon">${w.icon || '🏋️'}</span>
                             <div class="info">
                                 <h4>${w.name}</h4>
                                 <p>${new Date(w.date).toLocaleDateString()} • ${w.duration || 0} min</p>
                             </div>
+                            <span class="arrow">→</span>
                         </div>
                     `).join('')}
                 </div>
@@ -597,13 +635,14 @@
                 
                 <div class="section">
                     <div class="section-title">Recent Workouts</div>
-                    ${workoutHistory.slice(0, 5).map(w => `
-                        <div class="history-item">
+                    ${workoutHistory.slice(0, 5).map((w, idx) => `
+                        <div class="history-item" onclick="openWorkoutDetail(${idx})">
                             <span class="icon">${w.icon || '🏋️'}</span>
                             <div class="info">
                                 <h4>${w.name}</h4>
                                 <p>${new Date(w.date).toLocaleDateString()} • ${w.duration || 0} min</p>
                             </div>
+                            <span class="arrow">→</span>
                         </div>
                     `).join('')}
                 </div>
@@ -810,6 +849,108 @@
             const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+        };
+        
+        // ========== WORKOUT HISTORY DETAIL ==========
+        let selectedHistoryIndex = -1;
+        
+        window.openWorkoutDetail = function(index) {
+            selectedHistoryIndex = index;
+            const workout = workoutHistory[index];
+            if (!workout) return;
+            
+            document.getElementById('workoutDetailTitle').textContent = workout.name;
+            
+            let content = `
+                <div class="workout-detail-header">
+                    <span class="icon">${workout.icon || '🏋️'}</span>
+                    <div class="info">
+                        <h4>${workout.name}</h4>
+                        <p>${new Date(workout.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} • ${workout.duration || 0} min</p>
+                    </div>
+                </div>
+            `;
+            
+            // Exercises section
+            if (workout.exercises && Object.keys(workout.exercises).length > 0) {
+                content += `<div class="workout-detail-section"><h5>Exercises</h5>`;
+                
+                for (const [exerciseId, exerciseData] of Object.entries(workout.exercises)) {
+                    if (!exerciseData.completed) continue;
+                    
+                    const exerciseName = getExerciseName(exerciseId);
+                    const isPR = workout.prs && workout.prs.includes(exerciseId);
+                    
+                    content += `
+                        <div class="exercise-detail-card">
+                            <div class="exercise-name">
+                                ${exerciseName}
+                                ${isPR ? '<span class="pr-badge">🏆 PR</span>' : ''}
+                            </div>
+                            <div class="sets-grid">
+                                ${(exerciseData.sets || []).map((set, i) => `
+                                    <div class="set-chip">
+                                        Set ${i + 1}: <span class="weight">${set.weight || 0} lbs</span> × ${set.reps || 0}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                content += `</div>`;
+            }
+            
+            // Cardio section
+            if (workout.cardio && workout.cardio.duration > 0) {
+                const cardioEmojis = { treadmill: '🏃', bike: '🚴', elliptical: '⭕', rowing: '🚣', stairmaster: '🪜' };
+                content += `
+                    <div class="workout-detail-section">
+                        <h5>Cardio</h5>
+                        <div class="cardio-detail">
+                            <span class="icon">${cardioEmojis[workout.cardio.type] || '🏃'}</span>
+                            <div class="info">
+                                <h4>${workout.cardio.type.charAt(0).toUpperCase() + workout.cardio.type.slice(1)}</h4>
+                                <p>${workout.cardio.duration} minutes</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Notes section
+            if (workout.notes) {
+                content += `
+                    <div class="workout-detail-section">
+                        <h5>Notes</h5>
+                        <div class="notes-box">"${workout.notes}"</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('workoutDetailContent').innerHTML = content;
+            openModal('workoutDetailModal');
+        };
+        
+        function getExerciseName(id) {
+            const allExercises = [
+                ...Object.values(workouts).flatMap(w => w.exercises),
+                ...coreExercises
+            ];
+            const exercise = allExercises.find(e => e.id === id);
+            return exercise?.name || id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        window.deleteWorkoutFromHistory = async function() {
+            if (selectedHistoryIndex < 0) return;
+            
+            if (!confirm('Delete this workout from history? This cannot be undone.')) return;
+            
+            workoutHistory.splice(selectedHistoryIndex, 1);
+            await setDoc(doc(db, 'users', user.uid, 'data', 'workoutHistory'), { list: workoutHistory });
+            
+            closeModal('workoutDetailModal');
+            render();
+            showToast('Workout deleted');
         };
 
         function openModal(id) {

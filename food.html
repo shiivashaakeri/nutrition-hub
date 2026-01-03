@@ -232,6 +232,47 @@
         .empty-favorites .icon { font-size: 4.5rem; margin-bottom: 20px; opacity: 0.7; animation: float 3s ease-in-out infinite; }
         .empty-favorites h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 400; margin-bottom: 10px; }
         .empty-favorites p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+        
+        /* Build Plate Styles */
+        .plate-builder { padding-bottom: 20px; }
+        .plate-visual { display: flex; justify-content: center; margin-bottom: 24px; }
+        .plate-circle { width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary)); border: 4px solid var(--border); position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 30px rgba(0,0,0,0.08), inset 0 4px 20px rgba(255,255,255,0.5); }
+        .plate-section { position: absolute; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
+        .plate-section:hover { transform: scale(1.15); }
+        .protein-section { top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffcdd2, #ef9a9a); }
+        .veggie-section { bottom: 30px; left: 25px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); }
+        .carb-section { bottom: 30px; right: 25px; background: linear-gradient(135deg, #fff9c4, #fff176); }
+        .plate-emoji { font-size: 1.8rem; }
+        .plate-section.empty { opacity: 0.4; }
+        .plate-section.selected { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(1.1); }
+        
+        .plate-selector { background: var(--bg-card); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .selector-group { margin-bottom: 20px; }
+        .selector-group:last-child { margin-bottom: 0; }
+        .selector-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); }
+        .option-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .option-chip { padding: 10px 14px; background: var(--bg-secondary); border: 2px solid transparent; border-radius: 12px; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .option-chip:hover { border-color: var(--accent); }
+        .option-chip.selected { background: var(--accent-light); border-color: var(--accent); }
+        .option-chip .chip-emoji { font-size: 1.1rem; }
+        
+        .portion-row { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: var(--text-muted); }
+        .portion-btns { display: flex; gap: 8px; }
+        .portion-chip { padding: 6px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+        .portion-chip:hover { border-color: var(--accent); }
+        .portion-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        .plate-totals { display: flex; justify-content: space-around; background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.15)); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .total-item { text-align: center; }
+        .total-value { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; color: var(--accent); }
+        .total-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .plate-actions { display: flex; gap: 12px; }
+        .btn-plate-action { flex: 1; padding: 16px; border: none; border-radius: 14px; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .btn-plate-action:not(.secondary) { background: linear-gradient(135deg, var(--accent), #6b7363); color: white; box-shadow: 0 4px 15px rgba(125,132,113,0.3); }
+        .btn-plate-action:not(.secondary):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
+        .btn-plate-action.secondary { background: var(--bg-secondary); color: var(--text); border: 2px solid var(--border); }
+        .btn-plate-action.secondary:hover { border-color: var(--accent); background: var(--accent-light); }
     </style>
 </head>
 <body>
@@ -245,9 +286,10 @@
         <h1>🍽️ Food</h1>
         <div class="tabs">
             <button class="tab active" onclick="showTab('recipes')">Recipes</button>
-            <button class="tab" onclick="showTab('favorites')">⭐ Favorites</button>
-            <button class="tab" onclick="showTab('mealplan')">📅 Meal Plan</button>
-            <button class="tab" onclick="showTab('restaurants')">🍔 Restaurants</button>
+            <button class="tab" onclick="showTab('plate')">🍽️ Build</button>
+            <button class="tab" onclick="showTab('favorites')">⭐</button>
+            <button class="tab" onclick="showTab('mealplan')">📅 Plan</button>
+            <button class="tab" onclick="showTab('restaurants')">🍔</button>
         </div>
     </header>
     
@@ -268,6 +310,86 @@
                 <span class="count" id="recipeCount">0</span>
             </div>
             <div class="recipe-grid" id="allRecipes"></div>
+        </div>
+        
+        <!-- Build Plate Tab -->
+        <div id="plateTab" style="display:none;">
+            <div class="plate-builder">
+                <div class="plate-visual">
+                    <div class="plate-circle">
+                        <div class="plate-section protein-section" id="plateProteinSection">
+                            <span class="plate-emoji" id="plateProteinEmoji">🍗</span>
+                        </div>
+                        <div class="plate-section veggie-section" id="plateVeggieSection">
+                            <span class="plate-emoji" id="plateVeggieEmoji">🥦</span>
+                        </div>
+                        <div class="plate-section carb-section" id="plateCarbSection">
+                            <span class="plate-emoji" id="plateCarbEmoji">🍚</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="plate-selector">
+                    <div class="selector-group">
+                        <label>🥩 Protein</label>
+                        <div class="option-chips" id="proteinOptions"></div>
+                        <div class="portion-row">
+                            <span>Portion:</span>
+                            <div class="portion-btns">
+                                <button class="portion-chip" onclick="setProteinPortion(100)">100g</button>
+                                <button class="portion-chip active" onclick="setProteinPortion(150)">150g</button>
+                                <button class="portion-chip" onclick="setProteinPortion(200)">200g</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="selector-group">
+                        <label>🥬 Veggies</label>
+                        <div class="option-chips" id="veggieOptions"></div>
+                        <div class="portion-row">
+                            <span>Portion:</span>
+                            <div class="portion-btns">
+                                <button class="portion-chip" onclick="setVeggiePortion(50)">50g</button>
+                                <button class="portion-chip active" onclick="setVeggiePortion(100)">100g</button>
+                                <button class="portion-chip" onclick="setVeggiePortion(150)">150g</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="selector-group">
+                        <label>🍚 Carbs</label>
+                        <div class="option-chips" id="carbOptions"></div>
+                        <div class="portion-row">
+                            <span>Portion:</span>
+                            <div class="portion-btns">
+                                <button class="portion-chip" onclick="setCarbPortion(50)">50g</button>
+                                <button class="portion-chip active" onclick="setCarbPortion(100)">100g</button>
+                                <button class="portion-chip" onclick="setCarbPortion(150)">150g</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="plate-totals">
+                    <div class="total-item">
+                        <div class="total-value" id="plateProteinTotal">0g</div>
+                        <div class="total-label">Protein</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-value" id="plateCaloriesTotal">0</div>
+                        <div class="total-label">Calories</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-value" id="plateCarbsTotal">0g</div>
+                        <div class="total-label">Carbs</div>
+                    </div>
+                </div>
+                
+                <div class="plate-actions">
+                    <button class="btn-plate-action" onclick="addPlateToToday()">➕ Add to Today</button>
+                    <button class="btn-plate-action secondary" onclick="savePlateAsRecipe()">💾 Save as Recipe</button>
+                </div>
+            </div>
         </div>
         
         <!-- Favorites Tab -->
@@ -715,9 +837,12 @@
             event.target.classList.add('active');
             
             document.getElementById('recipesTab').style.display = tab === 'recipes' ? 'block' : 'none';
+            document.getElementById('plateTab').style.display = tab === 'plate' ? 'block' : 'none';
             document.getElementById('favoritesTab').style.display = tab === 'favorites' ? 'block' : 'none';
             document.getElementById('mealplanTab').style.display = tab === 'mealplan' ? 'block' : 'none';
             document.getElementById('restaurantsTab').style.display = tab === 'restaurants' ? 'block' : 'none';
+            
+            if (tab === 'plate') renderPlateBuilder();
         };
 
         window.filterRecipes = function() {
@@ -1018,6 +1143,266 @@
             toast.textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+        
+        // ========== BUILD-A-PLATE ==========
+        const plateIngredients = {
+            proteins: [
+                { id: 'chicken', name: 'Chicken', emoji: '🍗', proteinPer100g: 31, caloriesPer100g: 165, carbsPer100g: 0 },
+                { id: 'beef', name: 'Beef', emoji: '🥩', proteinPer100g: 26, caloriesPer100g: 250, carbsPer100g: 0 },
+                { id: 'salmon', name: 'Salmon', emoji: '🐟', proteinPer100g: 25, caloriesPer100g: 208, carbsPer100g: 0 },
+                { id: 'eggs', name: 'Eggs', emoji: '🥚', proteinPer100g: 13, caloriesPer100g: 155, carbsPer100g: 1 },
+                { id: 'tofu', name: 'Tofu', emoji: '🫘', proteinPer100g: 8, caloriesPer100g: 76, carbsPer100g: 2 },
+                { id: 'shrimp', name: 'Shrimp', emoji: '🦐', proteinPer100g: 24, caloriesPer100g: 99, carbsPer100g: 0 },
+                { id: 'turkey', name: 'Turkey', emoji: '🦃', proteinPer100g: 29, caloriesPer100g: 135, carbsPer100g: 0 },
+            ],
+            veggies: [
+                { id: 'broccoli', name: 'Broccoli', emoji: '🥦', proteinPer100g: 3, caloriesPer100g: 34, carbsPer100g: 7 },
+                { id: 'spinach', name: 'Spinach', emoji: '🥬', proteinPer100g: 3, caloriesPer100g: 23, carbsPer100g: 4 },
+                { id: 'peppers', name: 'Peppers', emoji: '🫑', proteinPer100g: 1, caloriesPer100g: 31, carbsPer100g: 6 },
+                { id: 'carrots', name: 'Carrots', emoji: '🥕', proteinPer100g: 1, caloriesPer100g: 41, carbsPer100g: 10 },
+                { id: 'asparagus', name: 'Asparagus', emoji: '🌿', proteinPer100g: 2, caloriesPer100g: 20, carbsPer100g: 4 },
+                { id: 'mushrooms', name: 'Mushrooms', emoji: '🍄', proteinPer100g: 3, caloriesPer100g: 22, carbsPer100g: 3 },
+            ],
+            carbs: [
+                { id: 'rice', name: 'Rice', emoji: '🍚', proteinPer100g: 3, caloriesPer100g: 130, carbsPer100g: 28 },
+                { id: 'potato', name: 'Potato', emoji: '🥔', proteinPer100g: 2, caloriesPer100g: 77, carbsPer100g: 17 },
+                { id: 'pasta', name: 'Pasta', emoji: '🍝', proteinPer100g: 5, caloriesPer100g: 131, carbsPer100g: 25 },
+                { id: 'quinoa', name: 'Quinoa', emoji: '🫓', proteinPer100g: 4, caloriesPer100g: 120, carbsPer100g: 21 },
+                { id: 'bread', name: 'Bread', emoji: '🍞', proteinPer100g: 9, caloriesPer100g: 265, carbsPer100g: 49 },
+                { id: 'sweetpotato', name: 'Sweet Potato', emoji: '🍠', proteinPer100g: 2, caloriesPer100g: 86, carbsPer100g: 20 },
+            ]
+        };
+        
+        let plateSelection = {
+            protein: null,
+            proteinPortion: 150,
+            veggie: null,
+            veggiePortion: 100,
+            carb: null,
+            carbPortion: 100
+        };
+        
+        function renderPlateBuilder() {
+            // Render protein options
+            const proteinContainer = document.getElementById('proteinOptions');
+            proteinContainer.innerHTML = plateIngredients.proteins.map(p => `
+                <div class="option-chip ${plateSelection.protein?.id === p.id ? 'selected' : ''}" onclick="selectProtein('${p.id}')">
+                    <span class="chip-emoji">${p.emoji}</span>
+                    <span>${p.name}</span>
+                </div>
+            `).join('');
+            
+            // Render veggie options
+            const veggieContainer = document.getElementById('veggieOptions');
+            veggieContainer.innerHTML = plateIngredients.veggies.map(v => `
+                <div class="option-chip ${plateSelection.veggie?.id === v.id ? 'selected' : ''}" onclick="selectVeggie('${v.id}')">
+                    <span class="chip-emoji">${v.emoji}</span>
+                    <span>${v.name}</span>
+                </div>
+            `).join('');
+            
+            // Render carb options
+            const carbContainer = document.getElementById('carbOptions');
+            carbContainer.innerHTML = plateIngredients.carbs.map(c => `
+                <div class="option-chip ${plateSelection.carb?.id === c.id ? 'selected' : ''}" onclick="selectCarb('${c.id}')">
+                    <span class="chip-emoji">${c.emoji}</span>
+                    <span>${c.name}</span>
+                </div>
+            `).join('');
+            
+            updatePlateVisual();
+            calculatePlateTotals();
+        }
+        
+        window.selectProtein = function(id) {
+            plateSelection.protein = plateIngredients.proteins.find(p => p.id === id);
+            renderPlateBuilder();
+        };
+        
+        window.selectVeggie = function(id) {
+            plateSelection.veggie = plateIngredients.veggies.find(v => v.id === id);
+            renderPlateBuilder();
+        };
+        
+        window.selectCarb = function(id) {
+            plateSelection.carb = plateIngredients.carbs.find(c => c.id === id);
+            renderPlateBuilder();
+        };
+        
+        window.setProteinPortion = function(grams) {
+            plateSelection.proteinPortion = grams;
+            document.querySelectorAll('.selector-group')[0].querySelectorAll('.portion-chip').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === grams);
+            });
+            calculatePlateTotals();
+        };
+        
+        window.setVeggiePortion = function(grams) {
+            plateSelection.veggiePortion = grams;
+            document.querySelectorAll('.selector-group')[1].querySelectorAll('.portion-chip').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === grams);
+            });
+            calculatePlateTotals();
+        };
+        
+        window.setCarbPortion = function(grams) {
+            plateSelection.carbPortion = grams;
+            document.querySelectorAll('.selector-group')[2].querySelectorAll('.portion-chip').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === grams);
+            });
+            calculatePlateTotals();
+        };
+        
+        function updatePlateVisual() {
+            const proteinSection = document.getElementById('plateProteinSection');
+            const veggieSection = document.getElementById('plateVeggieSection');
+            const carbSection = document.getElementById('plateCarbSection');
+            
+            document.getElementById('plateProteinEmoji').textContent = plateSelection.protein?.emoji || '🍗';
+            document.getElementById('plateVeggieEmoji').textContent = plateSelection.veggie?.emoji || '🥦';
+            document.getElementById('plateCarbEmoji').textContent = plateSelection.carb?.emoji || '🍚';
+            
+            proteinSection.classList.toggle('selected', !!plateSelection.protein);
+            proteinSection.classList.toggle('empty', !plateSelection.protein);
+            veggieSection.classList.toggle('selected', !!plateSelection.veggie);
+            veggieSection.classList.toggle('empty', !plateSelection.veggie);
+            carbSection.classList.toggle('selected', !!plateSelection.carb);
+            carbSection.classList.toggle('empty', !plateSelection.carb);
+        }
+        
+        function calculatePlateTotals() {
+            let totalProtein = 0;
+            let totalCalories = 0;
+            let totalCarbs = 0;
+            
+            if (plateSelection.protein) {
+                totalProtein += (plateSelection.protein.proteinPer100g * plateSelection.proteinPortion) / 100;
+                totalCalories += (plateSelection.protein.caloriesPer100g * plateSelection.proteinPortion) / 100;
+                totalCarbs += (plateSelection.protein.carbsPer100g * plateSelection.proteinPortion) / 100;
+            }
+            
+            if (plateSelection.veggie) {
+                totalProtein += (plateSelection.veggie.proteinPer100g * plateSelection.veggiePortion) / 100;
+                totalCalories += (plateSelection.veggie.caloriesPer100g * plateSelection.veggiePortion) / 100;
+                totalCarbs += (plateSelection.veggie.carbsPer100g * plateSelection.veggiePortion) / 100;
+            }
+            
+            if (plateSelection.carb) {
+                totalProtein += (plateSelection.carb.proteinPer100g * plateSelection.carbPortion) / 100;
+                totalCalories += (plateSelection.carb.caloriesPer100g * plateSelection.carbPortion) / 100;
+                totalCarbs += (plateSelection.carb.carbsPer100g * plateSelection.carbPortion) / 100;
+            }
+            
+            document.getElementById('plateProteinTotal').textContent = Math.round(totalProtein) + 'g';
+            document.getElementById('plateCaloriesTotal').textContent = Math.round(totalCalories);
+            document.getElementById('plateCarbsTotal').textContent = Math.round(totalCarbs) + 'g';
+        }
+        
+        window.addPlateToToday = async function() {
+            if (!plateSelection.protein && !plateSelection.veggie && !plateSelection.carb) {
+                showToast('Select at least one item!');
+                return;
+            }
+            
+            const plateName = buildPlateName();
+            const totals = getPlateTotals();
+            
+            const today = getLocalDateString();
+            const todayDoc = await getDoc(doc(db, 'users', user.uid, 'days', today));
+            let todayData = todayDoc.exists() ? todayDoc.data() : { date: today, protein: 0, calories: 0, foods: [] };
+            
+            todayData.foods = todayData.foods || [];
+            todayData.foods.push({
+                name: plateName,
+                emoji: '🍽️',
+                protein: totals.protein,
+                calories: totals.calories,
+                portion: 1
+            });
+            todayData.protein = (todayData.protein || 0) + totals.protein;
+            todayData.calories = (todayData.calories || 0) + totals.calories;
+            
+            await setDoc(doc(db, 'users', user.uid, 'days', today), todayData);
+            showToast('✓ Plate added to Today!');
+        };
+        
+        window.savePlateAsRecipe = async function() {
+            if (!plateSelection.protein && !plateSelection.veggie && !plateSelection.carb) {
+                showToast('Select at least one item!');
+                return;
+            }
+            
+            const plateName = buildPlateName();
+            const totals = getPlateTotals();
+            const ingredients = buildPlateIngredients();
+            
+            const newRecipe = {
+                id: 'custom_' + Date.now(),
+                name: plateName,
+                emoji: '🍽️',
+                category: 'lunch',
+                protein: totals.protein,
+                calories: totals.calories,
+                carbs: totals.carbs,
+                fat: 0,
+                ingredients: ingredients,
+                instructions: 'Cook protein, prepare veggies, add carbs. Season to taste.',
+                isCustom: true
+            };
+            
+            const recipesDoc = await getDoc(doc(db, 'users', user.uid, 'data', 'recipes'));
+            let customRecipes = recipesDoc.exists() ? recipesDoc.data().list || [] : [];
+            customRecipes.push(newRecipe);
+            await setDoc(doc(db, 'users', user.uid, 'data', 'recipes'), { list: customRecipes });
+            
+            recipes = [...defaultRecipes, ...customRecipes.map(r => ({ ...r, isCustom: true }))];
+            renderRecipes();
+            showToast('✓ Recipe saved!');
+        };
+        
+        function buildPlateName() {
+            const parts = [];
+            if (plateSelection.protein) parts.push(plateSelection.protein.name);
+            if (plateSelection.veggie) parts.push(plateSelection.veggie.name);
+            if (plateSelection.carb) parts.push(plateSelection.carb.name);
+            return parts.join(' + ') || 'Custom Plate';
+        }
+        
+        function buildPlateIngredients() {
+            const ingredients = [];
+            if (plateSelection.protein) ingredients.push(`${plateSelection.proteinPortion}g ${plateSelection.protein.name}`);
+            if (plateSelection.veggie) ingredients.push(`${plateSelection.veggiePortion}g ${plateSelection.veggie.name}`);
+            if (plateSelection.carb) ingredients.push(`${plateSelection.carbPortion}g ${plateSelection.carb.name}`);
+            return ingredients;
+        }
+        
+        function getPlateTotals() {
+            let totalProtein = 0;
+            let totalCalories = 0;
+            let totalCarbs = 0;
+            
+            if (plateSelection.protein) {
+                totalProtein += (plateSelection.protein.proteinPer100g * plateSelection.proteinPortion) / 100;
+                totalCalories += (plateSelection.protein.caloriesPer100g * plateSelection.proteinPortion) / 100;
+                totalCarbs += (plateSelection.protein.carbsPer100g * plateSelection.proteinPortion) / 100;
+            }
+            if (plateSelection.veggie) {
+                totalProtein += (plateSelection.veggie.proteinPer100g * plateSelection.veggiePortion) / 100;
+                totalCalories += (plateSelection.veggie.caloriesPer100g * plateSelection.veggiePortion) / 100;
+                totalCarbs += (plateSelection.veggie.carbsPer100g * plateSelection.veggiePortion) / 100;
+            }
+            if (plateSelection.carb) {
+                totalProtein += (plateSelection.carb.proteinPer100g * plateSelection.carbPortion) / 100;
+                totalCalories += (plateSelection.carb.caloriesPer100g * plateSelection.carbPortion) / 100;
+                totalCarbs += (plateSelection.carb.carbsPer100g * plateSelection.carbPortion) / 100;
+            }
+            
+            return {
+                protein: Math.round(totalProtein),
+                calories: Math.round(totalCalories),
+                carbs: Math.round(totalCarbs)
+            };
         }
     </script>
 </body>
