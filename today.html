@@ -389,6 +389,16 @@
         .day-food-item .macros { text-align: right; font-size: 0.8rem; color: var(--text-muted); }
         .day-no-data { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; }
         
+        /* Edit Day Button */
+        .edit-day-btn { padding: 8px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .edit-day-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+        .day-detail-header { display: flex; justify-content: space-between; align-items: center; }
+        .edit-day-section { margin-bottom: 16px; }
+        .edit-day-section label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
+        .edit-day-section input, .edit-day-section select { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 0.95rem; background: var(--bg-card); color: var(--text); }
+        .edit-day-section input:focus, .edit-day-section select:focus { outline: none; border-color: var(--accent); }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text); border: 1px solid var(--border); }
+        
         /* Weekly Summary */
         .weekly-summary-content { padding: 0 4px; }
         .weekly-header { text-align: center; margin-bottom: 20px; }
@@ -768,6 +778,7 @@
             <div class="day-detail" id="dayDetail" style="display:none;">
                 <div class="day-detail-header">
                     <h4 id="dayDetailDate">January 1, 2025</h4>
+                    <button class="edit-day-btn" id="editDayBtn" onclick="openEditDayModal()">✏️ Edit</button>
                 </div>
                 <div class="day-detail-content" id="dayDetailContent"></div>
             </div>
@@ -783,6 +794,51 @@
                 <button class="modal-close" onclick="closeModal('weeklySummaryModal')">✕</button>
             </div>
             <div class="weekly-summary-content" id="weeklySummaryContent"></div>
+        </div>
+    </div>
+    
+    <!-- Edit Day Modal -->
+    <div class="modal-overlay" id="editDayModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>✏️ Edit Day</h3>
+                <button class="modal-close" onclick="closeModal('editDayModal')">✕</button>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;" id="editDayDate">January 1, 2025</p>
+            
+            <div class="edit-day-section">
+                <label>🥩 Protein (g)</label>
+                <input type="number" id="editDayProtein" placeholder="0">
+            </div>
+            <div class="edit-day-section">
+                <label>🔥 Calories</label>
+                <input type="number" id="editDayCalories" placeholder="0">
+            </div>
+            <div class="edit-day-section">
+                <label>😴 Sleep (hours)</label>
+                <input type="number" step="0.5" id="editDaySleep" placeholder="0">
+            </div>
+            <div class="edit-day-section">
+                <label>🏋️ Workout</label>
+                <select id="editDayWorkout">
+                    <option value="">No workout</option>
+                    <option value="Push">Push Day</option>
+                    <option value="Pull">Pull Day</option>
+                    <option value="Legs">Leg Day</option>
+                    <option value="Upper">Upper Body</option>
+                    <option value="Lower">Lower Body</option>
+                    <option value="Full">Full Body</option>
+                    <option value="Cardio">Cardio</option>
+                    <option value="Custom">Custom</option>
+                </select>
+                <input type="number" id="editDayWorkoutDuration" placeholder="Duration (min)" style="margin-top:8px;">
+            </div>
+            
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('editDayModal')">Cancel</button>
+                <button class="btn btn-save" style="flex:1;" onclick="saveDayEdit()">💾 Save</button>
+            </div>
         </div>
     </div>
     
@@ -1236,6 +1292,15 @@
         async function saveToday() {
             setSyncStatus('syncing');
             await setDoc(doc(db, 'users', user.uid, 'days', today), todayData);
+            
+            // Update history array to keep calendar in sync
+            const historyIndex = history.findIndex(h => h.date === today);
+            if (historyIndex >= 0) {
+                history[historyIndex] = { ...todayData };
+            } else {
+                history.unshift({ ...todayData });
+            }
+            
             setSyncStatus('synced');
         }
 
@@ -2064,7 +2129,14 @@
         };
         
         function showDayDetail(dateStr) {
-            const dayData = history.find(h => h.date === dateStr);
+            // For today, use todayData; for other days, use history
+            let dayData;
+            if (dateStr === today) {
+                dayData = todayData;
+            } else {
+                dayData = history.find(h => h.date === dateStr);
+            }
+            
             const detailDiv = document.getElementById('dayDetail');
             const contentDiv = document.getElementById('dayDetailContent');
             
@@ -2073,7 +2145,7 @@
             const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
             document.getElementById('dayDetailDate').textContent = date.toLocaleDateString('en-US', options);
             
-            if (!dayData || dayData.protein === 0) {
+            if (!dayData || (dayData.protein === 0 && (!dayData.foods || dayData.foods.length === 0))) {
                 contentDiv.innerHTML = '<div class="day-no-data">📭 No data logged for this day</div>';
                 detailDiv.style.display = 'block';
                 return;
@@ -2155,19 +2227,115 @@
             detailDiv.style.display = 'block';
         }
         
+        // ========== EDIT PAST DAY ==========
+        let editingDayDate = null;
+        
+        window.openEditDayModal = function() {
+            if (!selectedCalendarDay) return;
+            editingDayDate = selectedCalendarDay;
+            
+            // Get data for the selected day
+            let dayData;
+            if (selectedCalendarDay === today) {
+                dayData = todayData;
+            } else {
+                dayData = history.find(h => h.date === selectedCalendarDay);
+            }
+            
+            // Format date for display
+            const date = new Date(selectedCalendarDay + 'T00:00:00');
+            document.getElementById('editDayDate').textContent = date.toLocaleDateString('en-US', { 
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
+            });
+            
+            // Populate fields
+            document.getElementById('editDayProtein').value = dayData?.protein || '';
+            document.getElementById('editDayCalories').value = dayData?.calories || '';
+            document.getElementById('editDaySleep').value = dayData?.sleep || '';
+            
+            // Workout
+            if (dayData?.workout && dayData.workout.completed) {
+                document.getElementById('editDayWorkout').value = dayData.workout.name || 'Custom';
+                document.getElementById('editDayWorkoutDuration').value = dayData.workout.duration || '';
+            } else {
+                document.getElementById('editDayWorkout').value = '';
+                document.getElementById('editDayWorkoutDuration').value = '';
+            }
+            
+            openModal('editDayModal');
+        };
+        
+        window.saveDayEdit = async function() {
+            if (!editingDayDate) return;
+            
+            const protein = parseInt(document.getElementById('editDayProtein').value) || 0;
+            const calories = parseInt(document.getElementById('editDayCalories').value) || 0;
+            const sleep = parseFloat(document.getElementById('editDaySleep').value) || 0;
+            const workoutName = document.getElementById('editDayWorkout').value;
+            const workoutDuration = parseInt(document.getElementById('editDayWorkoutDuration').value) || 0;
+            
+            // Prepare workout object
+            let workout = null;
+            if (workoutName) {
+                workout = {
+                    name: workoutName,
+                    icon: workoutName === 'Push' ? '💪' : workoutName === 'Pull' ? '🏋️' : workoutName === 'Legs' ? '🦵' : '🏃',
+                    completed: true,
+                    duration: workoutDuration
+                };
+            }
+            
+            if (editingDayDate === today) {
+                // Update today's data
+                todayData.protein = protein;
+                todayData.calories = calories;
+                todayData.sleep = sleep;
+                if (workout) todayData.workout = workout;
+                else todayData.workout = null;
+                
+                await saveToday();
+                renderAll();
+            } else {
+                // Update past day
+                let dayData = history.find(h => h.date === editingDayDate);
+                if (!dayData) {
+                    dayData = { date: editingDayDate, protein: 0, calories: 0, foods: [], sleep: 0, supplements: { morning: false, evening: false }, workout: null };
+                    history.push(dayData);
+                }
+                
+                dayData.protein = protein;
+                dayData.calories = calories;
+                dayData.sleep = sleep;
+                if (workout) dayData.workout = workout;
+                else dayData.workout = null;
+                
+                // Save to Firebase
+                await setDoc(doc(db, 'users', user.uid, 'days', editingDayDate), dayData);
+            }
+            
+            closeModal('editDayModal');
+            renderCalendar();
+            showDayDetail(editingDayDate);
+            showToast('✓ Day updated!');
+        };
+        
         // ========== WEEKLY SUMMARY ==========
         function renderWeeklyMiniStats() {
             const weekData = getWeekData();
             
-            const avgProtein = weekData.length > 0 
-                ? Math.round(weekData.reduce((sum, d) => sum + d.protein, 0) / weekData.length) 
+            // Filter to days with actual data
+            const daysWithData = weekData.filter(d => d.protein > 0);
+            
+            // Calculate averages based on days with data, not all 7 days
+            const avgProtein = daysWithData.length > 0 
+                ? Math.round(daysWithData.reduce((sum, d) => sum + d.protein, 0) / daysWithData.length) 
                 : 0;
             const workoutCount = weekData.filter(d => d.workout && d.workout.completed).length;
-            const goalDays = weekData.filter(d => d.protein >= goals.protein - 200).length;
+            const goalDays = daysWithData.filter(d => d.protein >= (goals?.protein || 125) - 200).length;
             
-            document.getElementById('weeklyAvgProtein').textContent = avgProtein + 'g';
+            document.getElementById('weeklyAvgProtein').textContent = avgProtein > 0 ? avgProtein + 'g' : '--';
             document.getElementById('weeklyWorkouts').textContent = workoutCount;
-            document.getElementById('weeklyGoalDays').textContent = goalDays + '/7';
+            document.getElementById('weeklyGoalDays').textContent = daysWithData.length > 0 ? goalDays + '/' + daysWithData.length : '--';
         }
         
         function getWeekData() {

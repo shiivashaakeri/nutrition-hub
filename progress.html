@@ -176,6 +176,21 @@
         .reward-edit-btn:hover { background: var(--bg-secondary); }
         .reward-save-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 12px; transition: all 0.25s; box-shadow: 0 2px 8px rgba(125,132,113,0.25); }
         .reward-save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(125,132,113,0.35); }
+        
+        /* Multiple Rewards List */
+        .rewards-list { margin-bottom: 12px; }
+        .reward-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.15)); border-radius: 10px; margin-bottom: 8px; }
+        .reward-item-name { flex: 1; font-weight: 600; font-size: 0.9rem; }
+        .reward-item-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+        .reward-item-link:hover { text-decoration: underline; }
+        .reward-item-delete { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+        .reward-item-delete:hover { background: var(--error); color: white; }
+        .reward-add-form { margin-top: 12px; }
+        .reward-add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .reward-add-row input { flex: 1; min-width: 120px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.85rem; background: var(--bg-card); color: var(--text); }
+        .reward-add-row input:focus { outline: none; border-color: var(--accent); }
+        .reward-add-btn { padding: 10px 16px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .reward-add-btn:hover { transform: scale(1.05); }
         .reward-claimed { text-align: center; padding: 18px; }
         .reward-claimed .icon { font-size: 2.8rem; margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
         .reward-claimed p { font-size: 0.92rem; color: var(--text-secondary); }
@@ -1041,7 +1056,10 @@
                 const progress = Math.min(100, (daysSinceStart / r.days) * 100);
                 const unlocked = daysSinceStart >= r.days;
                 const daysLeft = r.days - daysSinceStart;
-                const hasSavedReward = r.reward && r.reward.trim();
+                
+                // Support both old single reward format and new multiple rewards format
+                const rewardsList = r.rewards || (r.reward ? [{ name: r.reward, link: r.link }] : []);
+                const hasRewards = rewardsList.length > 0 && rewardsList.some(rw => rw.name && rw.name.trim());
 
                 return `
                     <div class="reward-card ${unlocked && !r.claimed ? 'reward-unlocked' : ''}">
@@ -1055,7 +1073,7 @@
                         ${r.claimed ? `
                             <div class="reward-claimed">
                                 <div class="icon">✅</div>
-                                <p>Reward claimed!</p>
+                                <p>Rewards claimed!</p>
                             </div>
                         ` : `
                             <div class="reward-status">
@@ -1064,24 +1082,26 @@
                                 </div>
                                 <div class="reward-progress-text">${unlocked ? '🎉 Unlocked!' : daysLeft + ' days left'}</div>
                             </div>
-                            ${hasSavedReward ? `
-                                <div class="reward-saved">
-                                    <div class="reward-saved-info">
-                                        <span class="reward-name">🎁 ${r.reward}</span>
-                                        ${r.link ? `<a href="${r.link}" target="_blank" class="reward-view-link">View Product →</a>` : ''}
+                            
+                            <div class="rewards-list" id="rewardsList_${r.id}">
+                                ${rewardsList.map((rw, idx) => rw.name ? `
+                                    <div class="reward-item">
+                                        <span class="reward-item-name">🎁 ${rw.name}</span>
+                                        ${rw.link ? `<a href="${rw.link}" target="_blank" class="reward-item-link">View →</a>` : ''}
+                                        <button class="reward-item-delete" onclick="deleteRewardItem('${r.id}', ${idx})">✕</button>
                                     </div>
-                                    <button class="reward-edit-btn" onclick="editReward('${r.id}')">✏️ Edit</button>
+                                ` : '').join('')}
+                            </div>
+                            
+                            <div class="reward-add-form" id="rewardForm_${r.id}">
+                                <div class="reward-add-row">
+                                    <input type="text" id="rewardName_${r.id}" placeholder="Reward name (e.g., New shoes)">
+                                    <input type="url" id="rewardLink_${r.id}" placeholder="Link (optional)">
+                                    <button class="reward-add-btn" onclick="addRewardItem('${r.id}')">+ Add</button>
                                 </div>
-                            ` : `
-                                <div class="reward-content" id="rewardForm_${r.id}">
-                                    <label>My Reward</label>
-                                    <input type="text" id="rewardName_${r.id}" value="${r.reward || ''}" placeholder="e.g., New workout clothes">
-                                    <label>Product Link (optional)</label>
-                                    <input type="url" id="rewardLink_${r.id}" value="${r.link || ''}" placeholder="https://amazon.com/...">
-                                    <button class="reward-save-btn" onclick="saveReward('${r.id}')">💾 Save Reward</button>
-                                </div>
-                            `}
-                            ${unlocked && hasSavedReward ? '<button class="claim-btn" onclick="claimReward(\'' + r.id + '\')">🎁 Claim Reward!</button>' : ''}
+                            </div>
+                            
+                            ${unlocked && hasRewards ? '<button class="claim-btn" onclick="claimReward(\'' + r.id + '\')">🎁 Claim All Rewards!</button>' : ''}
                         `}
                     </div>
                 `;
@@ -1325,28 +1345,49 @@
             showToast('✓ Measurements saved!');
         };
 
-        window.saveReward = async function(id) {
+        window.addRewardItem = async function(id) {
             const reward = rewards.find(r => r.id === id);
             if (reward) {
                 const nameInput = document.getElementById('rewardName_' + id);
                 const linkInput = document.getElementById('rewardLink_' + id);
                 
-                reward.reward = nameInput?.value?.trim() || '';
-                reward.link = linkInput?.value?.trim() || '';
+                const name = nameInput?.value?.trim();
+                const link = linkInput?.value?.trim();
+                
+                if (!name) {
+                    showToast('Please enter a reward name');
+                    return;
+                }
+                
+                // Initialize rewards array if needed
+                if (!reward.rewards) {
+                    reward.rewards = [];
+                    // Migrate old single reward if exists
+                    if (reward.reward) {
+                        reward.rewards.push({ name: reward.reward, link: reward.link || '' });
+                    }
+                }
+                
+                reward.rewards.push({ name, link: link || '' });
                 
                 await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+                
+                // Clear inputs
+                nameInput.value = '';
+                linkInput.value = '';
+                
                 renderRewards();
-                showToast('✓ Reward saved!');
+                showToast('✓ Reward added!');
             }
         };
         
-        window.editReward = function(id) {
+        window.deleteRewardItem = async function(id, index) {
             const reward = rewards.find(r => r.id === id);
-            if (reward) {
-                // Clear the saved reward to show the form again
-                reward.reward = '';
-                reward.link = '';
+            if (reward && reward.rewards && reward.rewards[index]) {
+                reward.rewards.splice(index, 1);
+                await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
                 renderRewards();
+                showToast('Reward removed');
             }
         };
 
@@ -1357,7 +1398,7 @@
                 await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
                 renderRewards();
                 triggerConfetti();
-                showToast('🎉 Reward claimed! Treat yourself!');
+                showToast('🎉 Rewards claimed! Treat yourself!');
             }
         };
 
