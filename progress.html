@@ -146,6 +146,17 @@
         .claim-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
         
         /* Body Measurements - Enhanced */
+        .weight-input-card { background: linear-gradient(135deg, var(--accent), #6b7363, #5a6349); border-radius: 22px; padding: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 18px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 6px 25px rgba(125,132,113,0.35); color: white; }
+        .weight-input-card:hover { transform: translateY(-3px); box-shadow: 0 10px 35px rgba(125,132,113,0.45); }
+        .weight-input-card:active { transform: scale(0.98); }
+        .weight-input-card .weight-icon { font-size: 2.5rem; width: 70px; height: 70px; background: rgba(255,255,255,0.15); border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+        .weight-input-card .weight-info { flex: 1; }
+        .weight-input-card .weight-info h4 { font-size: 0.85rem; font-weight: 500; opacity: 0.9; margin-bottom: 4px; }
+        .weight-input-card .weight-value { font-family: var(--font-display); font-size: 2rem; font-weight: 400; }
+        .weight-input-card .weight-change { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+        .weight-input-card .weight-action { text-align: right; }
+        .weight-input-card .log-weight-btn { font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.2); padding: 10px 16px; border-radius: 12px; transition: background 0.2s; }
+        .weight-input-card:hover .log-weight-btn { background: rgba(255,255,255,0.3); }
         .measurement-card { background: var(--bg-card); border-radius: 22px; padding: 22px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         .measurement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .measurement-header h4 { font-size: 0.98rem; font-weight: 600; }
@@ -232,6 +243,16 @@
         .save-btn { width: 100%; padding: 20px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 16px; font-family: inherit; font-size: 1.05rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: all 0.25s; box-shadow: 0 4px 15px rgba(125,132,113,0.3); }
         .save-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
         
+        /* Weight Slider */
+        .weight-slider { text-align: center; padding: 24px 0; }
+        .weight-display { font-family: var(--font-display); font-size: 4rem; font-weight: 400; color: var(--accent); line-height: 1; }
+        .weight-unit { font-size: 1.3rem; color: var(--text-secondary); margin-top: 4px; }
+        .slider-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 24px; }
+        .slider-btn { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg-card); font-size: 1.5rem; cursor: pointer; color: var(--text); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; }
+        .slider-btn:hover { border-color: var(--accent); background: var(--accent-light); transform: scale(1.1); }
+        .slider-btn:active { transform: scale(0.95); }
+        .slider-btn.small { width: 48px; height: 48px; font-size: 0.85rem; font-weight: 600; }
+        
         /* Confetti */
         .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
     </style>
@@ -308,6 +329,19 @@
         <!-- Body Tab -->
         <div id="bodyTab" style="display:none;">
             <div id="measurementReminder"></div>
+            
+            <!-- Current Weight Card -->
+            <div class="weight-input-card" onclick="openWeightModal()">
+                <div class="weight-icon">⚖️</div>
+                <div class="weight-info">
+                    <h4>Current Weight</h4>
+                    <div class="weight-value" id="currentWeightDisplay">-- kg</div>
+                    <div class="weight-change" id="weightChangeDisplay"></div>
+                </div>
+                <div class="weight-action">
+                    <span class="log-weight-btn">Log Weight →</span>
+                </div>
+            </div>
             
             <div class="chart-card">
                 <div class="chart-header">
@@ -439,6 +473,28 @@
                 <input type="number" id="measureThighs" placeholder="0">
             </div>
             <button class="save-btn" onclick="saveMeasurement()">Save Measurements</button>
+        </div>
+    </div>
+    
+    <!-- Weight Modal -->
+    <div class="modal-bottom" id="weightModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>⚖️ Log Weight</h3>
+                <button class="modal-close" onclick="closeModal('weightModal')">✕</button>
+            </div>
+            <div class="weight-slider">
+                <div class="weight-display" id="weightInputValue">65.0</div>
+                <div class="weight-unit">kg</div>
+                <div class="slider-controls">
+                    <button class="slider-btn" onclick="adjustWeight(-1)">−</button>
+                    <button class="slider-btn small" onclick="adjustWeight(-0.1)">−0.1</button>
+                    <button class="slider-btn small" onclick="adjustWeight(0.1)">+0.1</button>
+                    <button class="slider-btn" onclick="adjustWeight(1)">+</button>
+                </div>
+            </div>
+            <button class="save-btn" onclick="saveWeight()">Save Weight</button>
         </div>
     </div>
     
@@ -794,9 +850,60 @@
                 document.getElementById('measurementReminder').innerHTML = '';
             }
 
+            // Display current weight
+            renderCurrentWeight();
             renderWeightChart();
             renderMeasurements();
         }
+        
+        let currentWeightInput = 65;
+        
+        function renderCurrentWeight() {
+            if (weightData.length > 0) {
+                const latest = weightData[weightData.length - 1];
+                const displayWeight = Math.round(latest.weight * 10) / 10;
+                document.getElementById('currentWeightDisplay').textContent = displayWeight.toFixed(1) + ' kg';
+                currentWeightInput = displayWeight;
+                
+                if (weightData.length > 1) {
+                    const first = weightData[0];
+                    const diff = Math.round((latest.weight - first.weight) * 10) / 10;
+                    const changeText = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' kg from start';
+                    document.getElementById('weightChangeDisplay').textContent = changeText;
+                } else {
+                    document.getElementById('weightChangeDisplay').textContent = '';
+                }
+            } else {
+                document.getElementById('currentWeightDisplay').textContent = '-- kg';
+                document.getElementById('weightChangeDisplay').textContent = 'Tap to log your first weight';
+            }
+        }
+        
+        window.openWeightModal = function() {
+            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
+            openModal('weightModal');
+        };
+        
+        window.adjustWeight = function(delta) {
+            currentWeightInput = Math.max(30, Math.round((currentWeightInput + delta) * 10) / 10);
+            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
+        };
+        
+        window.saveWeight = async function() {
+            const weightToSave = Math.round(currentWeightInput * 10) / 10;
+            const existing = weightData.findIndex(w => w.date === today);
+            
+            if (existing > -1) {
+                weightData[existing].weight = weightToSave;
+            } else {
+                weightData.push({ date: today, weight: weightToSave });
+            }
+            
+            await setDoc(doc(db, 'users', user.uid, 'data', 'weight'), { list: weightData });
+            closeModal('weightModal');
+            renderBody();
+            showToast('✓ Weight saved!');
+        };
 
         function renderWeightChart() {
             const container = document.getElementById('weightChart');
