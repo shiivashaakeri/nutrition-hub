@@ -135,6 +135,8 @@
         .day-food-item .info { flex: 1; }
         .day-food-item .macros { color: var(--text-muted); }
         .day-no-data { text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.85rem; }
+        .view-full-day-btn { width: 100%; padding: 12px; margin-top: 14px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .view-full-day-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(125,132,113,0.3); }
         
         /* Achievements Grid - Enhanced */
         .achievements-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -1260,9 +1262,20 @@
                 `;
             }
             
+            // Add View Full Day button
+            html += `
+                <button class="view-full-day-btn" onclick="viewFullDay('${dateStr}')">
+                    View Full Day →
+                </button>
+            `;
+            
             contentDiv.innerHTML = html;
             detailDiv.style.display = 'block';
         }
+        
+        window.viewFullDay = function(dateStr) {
+            window.location.href = 'day.html?date=' + dateStr;
+        };
 
         window.openAchievementModal = function(id, isNew = false) {
             const allBadges = [...achievements.consistency, ...achievements.strength, ...achievements.goals];

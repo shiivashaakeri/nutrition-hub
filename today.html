@@ -388,6 +388,8 @@
         .day-food-item .info { flex: 1; }
         .day-food-item .macros { text-align: right; font-size: 0.8rem; color: var(--text-muted); }
         .day-no-data { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .view-full-day-btn { width: 100%; padding: 14px; margin-top: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .view-full-day-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(125,132,113,0.3); }
         
         /* Edit Day Button */
         .edit-day-btn { padding: 8px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
@@ -2217,9 +2219,20 @@
                 }
             }
             
+            // Add View Full Day button
+            html += `
+                <button class="view-full-day-btn" onclick="viewFullDay('${dateStr}')">
+                    View Full Day →
+                </button>
+            `;
+            
             contentDiv.innerHTML = html;
             detailDiv.style.display = 'block';
         }
+        
+        window.viewFullDay = function(dateStr) {
+            window.location.href = 'day.html?date=' + dateStr;
+        };
         
         // ========== EDIT PAST DAY ==========
         let editingDayDate = null;
