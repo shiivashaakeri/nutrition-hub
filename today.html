@@ -201,6 +201,31 @@
         .supplement-card .status { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; }
         .supplement-card.taken .status { color: var(--accent); font-weight: 600; }
         
+        /* Two Column Layout */
+        .two-column-section { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+        .column-card { background: var(--bg-card); border-radius: 20px; padding: 18px; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .column-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        .column-card:active { transform: scale(0.98); }
+        .column-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .column-title { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+        .column-edit { font-size: 0.72rem; color: var(--accent); font-weight: 600; }
+        
+        /* Mini Supplements */
+        .supplement-mini-row { display: flex; gap: 10px; }
+        .supp-mini { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; background: var(--bg-secondary); border-radius: 12px; border: 2px solid transparent; transition: all 0.2s; }
+        .supp-mini:hover { border-color: var(--accent); }
+        .supp-mini.taken { background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.2)); border-color: var(--accent); }
+        .supp-mini .supp-icon { font-size: 1.2rem; }
+        .supp-mini .supp-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
+        .supp-mini .supp-status { font-size: 0.9rem; }
+        .supp-mini.taken .supp-status { color: var(--accent); }
+        
+        /* Sleep Display */
+        .sleep-display { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin-bottom: 4px; }
+        .sleep-value { font-family: var(--font-display); font-size: 2rem; font-weight: 400; color: var(--text); }
+        .sleep-unit { font-size: 0.85rem; color: var(--text-muted); }
+        .sleep-label { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+        
         /* Protein Shake Suggestion - Enhanced */
         .shake-suggestion { background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.25)); border-radius: 20px; padding: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; border: 1px solid rgba(125,132,113,0.1); box-shadow: 0 4px 15px rgba(125,132,113,0.1); }
         .shake-suggestion .icon { font-size: 2.2rem; animation: gentleBounce 2s ease-in-out infinite; }
@@ -407,15 +432,6 @@
             </div>
         </div>
         
-        <!-- Water -->
-        <div class="water-section">
-            <div class="section-header">
-                <span class="section-title">💧 Water</span>
-                <span class="section-badge" id="waterBadge">0/8</span>
-            </div>
-            <div class="water-glasses" id="waterGlasses"></div>
-        </div>
-        
         <!-- Today's Workout -->
         <div class="workout-section">
             <div class="section-header">
@@ -445,38 +461,36 @@
             <div class="cycle-tip" id="cycleTip">Consider lighter workouts today</div>
         </div>
         
-        <!-- Supplements -->
-        <div class="supplements-section">
-            <div class="section-header">
-                <span class="section-title">💊 Supplements</span>
-                <span style="font-size:0.8rem; color:var(--accent); cursor:pointer;" onclick="openSupplementsSettings()">Edit ✏️</span>
-            </div>
-            <div class="supplement-row">
-                <div class="supplement-card" id="suppMorning" onclick="toggleSupplement('morning')">
-                    <div class="icon">🌅</div>
-                    <div class="label">Morning</div>
-                    <div class="pills" id="morningPills" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;"></div>
-                    <div class="status">Not taken</div>
+        <!-- Supplements + Sleep (2-column) -->
+        <div class="two-column-section">
+            <div class="column-card">
+                <div class="column-header">
+                    <span class="column-title">💊 Supplements</span>
+                    <span class="column-edit" onclick="openSupplementsSettings()">Edit</span>
                 </div>
-                <div class="supplement-card" id="suppEvening" onclick="toggleSupplement('evening')">
-                    <div class="icon">🌙</div>
-                    <div class="label">Evening</div>
-                    <div class="pills" id="eveningPills" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;"></div>
-                    <div class="status">Not taken</div>
+                <div class="supplement-mini-row">
+                    <div class="supp-mini" id="suppMorningMini" onclick="toggleSupplement('morning')">
+                        <span class="supp-icon">🌅</span>
+                        <span class="supp-label">AM</span>
+                        <span class="supp-status" id="suppMorningStatus">○</span>
+                    </div>
+                    <div class="supp-mini" id="suppEveningMini" onclick="toggleSupplement('evening')">
+                        <span class="supp-icon">🌙</span>
+                        <span class="supp-label">PM</span>
+                        <span class="supp-status" id="suppEveningStatus">○</span>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Weight Card -->
-        <div class="weight-card" onclick="openWeightModal()" id="weightCard">
-            <div class="icon">⚖️</div>
-            <div class="info">
-                <h4>Current Weight</h4>
-                <div class="value" id="weightValue">--</div>
-                <div class="change" id="weightChange"></div>
+            <div class="column-card" onclick="openSleepModal()">
+                <div class="column-header">
+                    <span class="column-title">😴 Sleep</span>
+                </div>
+                <div class="sleep-display">
+                    <span class="sleep-value" id="sleepValue">--</span>
+                    <span class="sleep-unit">hrs</span>
+                </div>
+                <div class="sleep-label">Last night</div>
             </div>
-            <div id="weightReminder"></div>
-            <span class="arrow">→</span>
         </div>
     </div>
     
@@ -570,23 +584,24 @@
         </div>
     </div>
     
-    <!-- Weight Modal -->
-    <div class="modal-overlay" id="weightModal">
+    <!-- Sleep Modal -->
+    <div class="modal-overlay" id="sleepModal">
         <div class="modal">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3>⚖️ Log Weight</h3>
-                <button class="modal-close" onclick="closeModal('weightModal')">✕</button>
+                <h3>😴 Log Sleep</h3>
+                <button class="modal-close" onclick="closeModal('sleepModal')">✕</button>
             </div>
             <div class="portion-control">
-                <button class="portion-btn" onclick="adjustWeight(-0.1)">−</button>
+                <button class="portion-btn" onclick="adjustSleep(-0.5)">−</button>
                 <div class="portion-value">
-                    <div class="num" id="weightInputValue">65.0</div>
-                    <div class="unit">kg</div>
+                    <div class="num" id="sleepInputValue">7.0</div>
+                    <div class="unit">hours</div>
                 </div>
-                <button class="portion-btn" onclick="adjustWeight(0.1)">+</button>
+                <button class="portion-btn" onclick="adjustSleep(0.5)">+</button>
             </div>
-            <button class="btn btn-save" style="width:100%; margin-top: 20px;" onclick="saveWeight()">Save Weight</button>
+            <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:12px;">How many hours did you sleep last night?</p>
+            <button class="btn btn-save" style="width:100%; margin-top: 20px;" onclick="saveSleep()">Save Sleep</button>
         </div>
     </div>
     
@@ -714,7 +729,7 @@
 
         let user = null;
         let userData = null;
-        let todayData = { date: '', protein: 0, calories: 0, water: 0, foods: [], supplements: { morning: false, evening: false }, workout: null };
+        let todayData = { date: '', protein: 0, calories: 0, water: 0, sleep: 0, foods: [], supplements: { morning: false, evening: false }, workout: null };
         let goals = { protein: 125, calories: 1550, water: 8 };
         let weightData = [];
         let mealPlan = {};
@@ -723,7 +738,6 @@
         let history = [];
         let editingFoodIndex = -1;
         let editingPortion = 1;
-        let currentWeightInput = 65;
         let supplementSettings = { morning: 'Vitamin D, Omega-3', evening: 'Magnesium' };
 
         const todayDate = new Date();
@@ -831,13 +845,12 @@
             renderHeader();
             renderStreak();
             renderRings();
-            renderWater();
             renderWorkout();
             renderPlannedMeals();
             renderFoodList();
             renderCycle();
             renderSupplements();
-            renderWeight();
+            renderSleep();
             checkShakeSuggestion();
             applyTheme();
             
@@ -864,9 +877,24 @@
         function renderStreak() {
             let streak = 0;
             const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            for (const day of sortedHistory) {
-                if (day.protein >= goals.protein * 0.9) streak++;
-                else break;
+            
+            // Check if today counts (within ±200 of goal)
+            const todayHit = Math.abs(todayData.protein - goals.protein) <= 200 || todayData.protein >= goals.protein;
+            if (todayHit && todayData.protein > 0) {
+                streak = 1;
+                // Continue counting from history (skip today if it's in history)
+                for (const day of sortedHistory) {
+                    if (day.date === today) continue;
+                    if (day.protein >= goals.protein - 200) streak++;
+                    else break;
+                }
+            } else {
+                // Today doesn't count, check history
+                for (const day of sortedHistory) {
+                    if (day.date === today) continue;
+                    if (day.protein >= goals.protein - 200) streak++;
+                    else break;
+                }
             }
             document.getElementById('streakCount').textContent = streak;
         }
@@ -884,29 +912,6 @@
             document.getElementById('proteinGoalText').textContent = '/ ' + goals.protein + 'g';
             document.getElementById('caloriesGoalText').textContent = '/ ' + goals.calories;
         }
-
-        function renderWater() {
-            const container = document.getElementById('waterGlasses');
-            container.innerHTML = '';
-            for (let i = 0; i < goals.water; i++) {
-                const glass = document.createElement('div');
-                glass.className = 'water-glass' + (i < todayData.water ? ' filled' : '');
-                glass.textContent = i < todayData.water ? '💧' : '○';
-                glass.onclick = () => toggleWater(i);
-                container.appendChild(glass);
-            }
-            document.getElementById('waterBadge').textContent = todayData.water + '/' + goals.water;
-        }
-
-        window.toggleWater = async function(index) {
-            if (index < todayData.water) {
-                todayData.water = index;
-            } else {
-                todayData.water = index + 1;
-            }
-            renderWater();
-            await saveToday();
-        };
 
         function renderWorkout() {
             const container = document.getElementById('workoutContent');
@@ -1082,18 +1087,16 @@
         }
 
         function renderSupplements() {
-            const morning = document.getElementById('suppMorning');
-            const evening = document.getElementById('suppEvening');
+            const morning = document.getElementById('suppMorningMini');
+            const evening = document.getElementById('suppEveningMini');
             
-            morning.classList.toggle('taken', todayData.supplements.morning);
-            evening.classList.toggle('taken', todayData.supplements.evening);
-            
-            morning.querySelector('.status').textContent = todayData.supplements.morning ? '✓ Taken' : 'Not taken';
-            evening.querySelector('.status').textContent = todayData.supplements.evening ? '✓ Taken' : 'Not taken';
-            
-            // Show custom pill names
-            document.getElementById('morningPills').textContent = supplementSettings.morning || 'Tap Edit to add';
-            document.getElementById('eveningPills').textContent = supplementSettings.evening || 'Tap Edit to add';
+            if (morning && evening) {
+                morning.classList.toggle('taken', todayData.supplements.morning);
+                evening.classList.toggle('taken', todayData.supplements.evening);
+                
+                document.getElementById('suppMorningStatus').textContent = todayData.supplements.morning ? '✓' : '○';
+                document.getElementById('suppEveningStatus').textContent = todayData.supplements.evening ? '✓' : '○';
+            }
         }
 
         window.toggleSupplement = async function(time) {
@@ -1118,32 +1121,33 @@
             renderSupplements();
             showToast('✓ Supplements saved!');
         };
-
-        function renderWeight() {
-            if (weightData.length > 0) {
-                const latest = weightData[weightData.length - 1];
-                const displayWeight = Math.round(latest.weight * 10) / 10;
-                document.getElementById('weightValue').textContent = displayWeight.toFixed(1) + ' kg';
-                currentWeightInput = displayWeight;
-                
-                if (weightData.length > 1) {
-                    const first = weightData[0];
-                    const diff = Math.round((latest.weight - first.weight) * 10) / 10;
-                    document.getElementById('weightChange').textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' kg total';
-                }
-            }
-            
-            // Check if it's a weigh-in day (Mon/Fri)
-            const dayOfWeek = new Date().getDay();
-            const isWeighInDay = dayOfWeek === 1 || dayOfWeek === 5;
-            const hasWeighedToday = weightData.some(w => w.date === today);
-            
-            if (isWeighInDay && !hasWeighedToday) {
-                document.getElementById('weightReminder').innerHTML = '<span class="weight-reminder">Weigh-in day!</span>';
-            } else {
-                document.getElementById('weightReminder').innerHTML = '';
-            }
+        
+        // Sleep functions
+        let currentSleepInput = 7;
+        
+        function renderSleep() {
+            const sleepValue = todayData.sleep || 0;
+            document.getElementById('sleepValue').textContent = sleepValue > 0 ? sleepValue.toFixed(1) : '--';
+            currentSleepInput = sleepValue > 0 ? sleepValue : 7;
         }
+        
+        window.openSleepModal = function() {
+            document.getElementById('sleepInputValue').textContent = currentSleepInput.toFixed(1);
+            openModal('sleepModal');
+        };
+        
+        window.adjustSleep = function(delta) {
+            currentSleepInput = Math.max(0, Math.min(14, Math.round((currentSleepInput + delta) * 10) / 10));
+            document.getElementById('sleepInputValue').textContent = currentSleepInput.toFixed(1);
+        };
+        
+        window.saveSleep = async function() {
+            todayData.sleep = currentSleepInput;
+            await saveToday();
+            closeModal('sleepModal');
+            renderSleep();
+            showToast('✓ Sleep logged!');
+        };
 
         function checkShakeSuggestion() {
             const hour = new Date().getHours();
@@ -1396,18 +1400,25 @@
             let longestStreak = 0;
             let tempStreak = 0;
             
+            // Check if today counts
+            const todayHit = Math.abs(todayData.protein - goals.protein) <= 200 || todayData.protein >= goals.protein;
+            if (todayHit && todayData.protein > 0) {
+                currentStreak = 1;
+            }
+            
             const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
             for (const day of sortedHistory) {
-                if (day.protein >= goals.protein * 0.9) {
-                    currentStreak++;
+                if (day.date === today) continue; // Skip today, already counted
+                if (day.protein >= goals.protein - 200) {
+                    if (currentStreak > 0 || todayHit) currentStreak++;
                     tempStreak++;
                 } else {
-                    longestStreak = Math.max(longestStreak, tempStreak);
+                    longestStreak = Math.max(longestStreak, tempStreak + (todayHit ? 1 : 0));
                     tempStreak = 0;
                     if (currentStreak > 0) break;
                 }
             }
-            longestStreak = Math.max(longestStreak, tempStreak);
+            longestStreak = Math.max(longestStreak, currentStreak, tempStreak);
             
             document.getElementById('currentStreak').textContent = currentStreak;
             document.getElementById('longestStreak').textContent = longestStreak;
@@ -1484,31 +1495,6 @@
             // Re-render the modal
             openRingDetail('protein');
             showToast('Food removed');
-        };
-
-        window.openWeightModal = function() {
-            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
-            openModal('weightModal');
-        };
-
-        window.adjustWeight = function(delta) {
-            currentWeightInput = Math.max(30, Math.round((currentWeightInput + delta) * 10) / 10);
-            document.getElementById('weightInputValue').textContent = currentWeightInput.toFixed(1);
-        };
-
-        window.saveWeight = async function() {
-            const weightToSave = Math.round(currentWeightInput * 10) / 10;
-            const existing = weightData.findIndex(w => w.date === today);
-            if (existing > -1) {
-                weightData[existing].weight = weightToSave;
-            } else {
-                weightData.push({ date: today, weight: weightToSave });
-            }
-            
-            await setDoc(doc(db, 'users', user.uid, 'data', 'weight'), { list: weightData });
-            closeModal('weightModal');
-            renderWeight();
-            showToast('✓ Weight saved!');
         };
 
         window.openCycleModal = function() {
