@@ -42,6 +42,8 @@
         
         /* Header - Enhanced */
         .header { padding: 20px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: var(--accent-light); transform: scale(1.05); }
         .header h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; margin-bottom: 18px; }
         
         /* Tabs - Enhanced */
@@ -106,6 +108,33 @@
         .calendar-day.hit { background: linear-gradient(135deg, var(--accent), #6b7363); color: white; box-shadow: 0 2px 8px rgba(125,132,113,0.25); }
         .calendar-day.partial { background: var(--accent-light); color: var(--accent); }
         .calendar-day.today { box-shadow: inset 0 0 0 2px var(--warm), 0 0 0 4px var(--warm-light); }
+        .calendar-day.selected { background: var(--accent); color: white; }
+        .calendar-day:not(.header):not(.empty):not(.future) { cursor: pointer; flex-direction: column; gap: 2px; }
+        .calendar-day:not(.header):not(.empty):not(.future):hover { transform: scale(1.1); z-index: 1; }
+        .cal-indicators { display: flex; gap: 2px; }
+        .cal-indicator { width: 5px; height: 5px; border-radius: 50%; }
+        .cal-indicator.protein-hit { background: var(--accent); }
+        .cal-indicator.protein-partial { background: var(--warm); }
+        .cal-indicator.workout { background: #4CAF50; }
+        .calendar-legend { display: flex; justify-content: center; gap: 14px; padding: 12px 0; font-size: 0.72rem; color: var(--text-muted); }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .legend-dot.hit { background: var(--accent); }
+        .legend-dot.partial { background: var(--warm); }
+        .legend-dot.workout { background: #4CAF50; }
+        .day-detail { background: var(--bg-secondary); border-radius: 14px; padding: 16px; margin-top: 16px; }
+        .day-detail-header h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
+        .day-detail-section { margin-bottom: 14px; }
+        .day-detail-section:last-child { margin-bottom: 0; }
+        .day-detail-section h5 { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .day-detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+        .day-detail-row .value { font-weight: 600; }
+        .day-detail-foods { margin-top: 6px; }
+        .day-food-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border-radius: 8px; margin-bottom: 4px; font-size: 0.8rem; }
+        .day-food-item .emoji { font-size: 1rem; }
+        .day-food-item .info { flex: 1; }
+        .day-food-item .macros { color: var(--text-muted); }
+        .day-no-data { text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.85rem; }
         
         /* Achievements Grid - Enhanced */
         .achievements-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -138,6 +167,15 @@
         .reward-link button { padding: 14px 18px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 12px; font-size: 0.88rem; cursor: pointer; white-space: nowrap; font-weight: 600; transition: all 0.25s; box-shadow: 0 2px 8px rgba(125,132,113,0.25); }
         .reward-link button:hover { transform: scale(1.05); }
         .reward-link button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .reward-saved { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.15)); border-radius: 14px; gap: 12px; }
+        .reward-saved-info { flex: 1; }
+        .reward-name { font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 6px; }
+        .reward-view-link { font-size: 0.85rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+        .reward-view-link:hover { text-decoration: underline; }
+        .reward-edit-btn { padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .reward-edit-btn:hover { background: var(--bg-secondary); }
+        .reward-save-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 12px; transition: all 0.25s; box-shadow: 0 2px 8px rgba(125,132,113,0.25); }
+        .reward-save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(125,132,113,0.35); }
         .reward-claimed { text-align: center; padding: 18px; }
         .reward-claimed .icon { font-size: 2.8rem; margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
         .reward-claimed p { font-size: 0.92rem; color: var(--text-secondary); }
@@ -266,7 +304,10 @@
     <canvas class="confetti" id="confetti"></canvas>
     
     <header class="header">
-        <h1>📈 Progress</h1>
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <h1>📈 Progress</h1>
+            <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
+        </div>
         <div class="tabs">
             <button class="tab active" onclick="showTab('overview')">Overview</button>
             <button class="tab" onclick="showTab('body')">Body</button>
@@ -411,10 +452,10 @@
     
     <!-- Streak Calendar Modal -->
     <div class="modal-bottom" id="calendarModal">
-        <div class="modal-sheet">
+        <div class="modal-sheet" style="max-height:90vh;">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h3>🔥 Streak Calendar</h3>
+                <h3>📅 Calendar</h3>
                 <button class="modal-close" onclick="closeModal('calendarModal')">✕</button>
             </div>
             <div class="calendar-card" style="border:none;padding:0;">
@@ -426,6 +467,17 @@
                     </div>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot hit"></span> Goal Hit</span>
+                    <span class="legend-item"><span class="legend-dot partial"></span> Partial</span>
+                    <span class="legend-item"><span class="legend-dot workout"></span> Workout</span>
+                </div>
+            </div>
+            <div class="day-detail" id="dayDetailProgress" style="display:none;">
+                <div class="day-detail-header">
+                    <h4 id="dayDetailDateProgress">January 1, 2025</h4>
+                </div>
+                <div class="day-detail-content" id="dayDetailContentProgress"></div>
             </div>
             <div class="stats-grid" style="margin-top:20px;">
                 <div class="stat-card">
@@ -691,9 +743,25 @@
         function calculateStreak() {
             let streak = 0;
             const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            for (const day of sorted) {
-                if (day.protein >= goals.protein * 0.9) streak++;
-                else break;
+            
+            // Check if today counts (within ±200 of goal or met)
+            const todayEntry = sorted.find(d => d.date === today);
+            const todayProtein = todayEntry?.protein || 0;
+            const todayHit = Math.abs(todayProtein - goals.protein) <= 200 || todayProtein >= goals.protein;
+            
+            if (todayHit && todayProtein > 0) {
+                streak = 1;
+                for (const day of sorted) {
+                    if (day.date === today) continue;
+                    if (day.protein >= goals.protein - 200) streak++;
+                    else break;
+                }
+            } else {
+                for (const day of sorted) {
+                    if (day.date === today) continue;
+                    if (day.protein >= goals.protein - 200) streak++;
+                    else break;
+                }
             }
             return streak;
         }
@@ -703,7 +771,7 @@
             let current = 0;
             const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
             for (const day of sorted) {
-                if (day.protein >= goals.protein * 0.9) {
+                if (day.protein >= goals.protein - 200) {
                     current++;
                     longest = Math.max(longest, current);
                 } else {
@@ -973,6 +1041,7 @@
                 const progress = Math.min(100, (daysSinceStart / r.days) * 100);
                 const unlocked = daysSinceStart >= r.days;
                 const daysLeft = r.days - daysSinceStart;
+                const hasSavedReward = r.reward && r.reward.trim();
 
                 return `
                     <div class="reward-card ${unlocked && !r.claimed ? 'reward-unlocked' : ''}">
@@ -995,16 +1064,24 @@
                                 </div>
                                 <div class="reward-progress-text">${unlocked ? '🎉 Unlocked!' : daysLeft + ' days left'}</div>
                             </div>
-                            <div class="reward-content">
-                                <label>My Reward</label>
-                                <input type="text" value="${r.reward || ''}" placeholder="e.g., New workout clothes" onchange="updateRewardText('${r.id}', this.value)">
-                                <label>Product Link (optional)</label>
-                                <div class="reward-link">
-                                    <input type="url" value="${r.link || ''}" placeholder="https://amazon.com/..." onchange="updateRewardLink('${r.id}', this.value)">
-                                    <button ${!r.link ? 'disabled' : ''} onclick="window.open('${r.link}', '_blank')">🛒 View</button>
+                            ${hasSavedReward ? `
+                                <div class="reward-saved">
+                                    <div class="reward-saved-info">
+                                        <span class="reward-name">🎁 ${r.reward}</span>
+                                        ${r.link ? `<a href="${r.link}" target="_blank" class="reward-view-link">View Product →</a>` : ''}
+                                    </div>
+                                    <button class="reward-edit-btn" onclick="editReward('${r.id}')">✏️ Edit</button>
                                 </div>
-                                ${unlocked ? '<button class="claim-btn" onclick="claimReward(\'' + r.id + '\')">🎁 Claim Reward!</button>' : ''}
-                            </div>
+                            ` : `
+                                <div class="reward-content" id="rewardForm_${r.id}">
+                                    <label>My Reward</label>
+                                    <input type="text" id="rewardName_${r.id}" value="${r.reward || ''}" placeholder="e.g., New workout clothes">
+                                    <label>Product Link (optional)</label>
+                                    <input type="url" id="rewardLink_${r.id}" value="${r.link || ''}" placeholder="https://amazon.com/...">
+                                    <button class="reward-save-btn" onclick="saveReward('${r.id}')">💾 Save Reward</button>
+                                </div>
+                            `}
+                            ${unlocked && hasSavedReward ? '<button class="claim-btn" onclick="claimReward(\'' + r.id + '\')">🎁 Claim Reward!</button>' : ''}
                         `}
                     </div>
                 `;
@@ -1039,6 +1116,8 @@
             calendarMonth.setMonth(calendarMonth.getMonth() + delta);
             renderCalendar();
         };
+        
+        let selectedCalDay = null;
 
         function renderCalendar() {
             const year = calendarMonth.getFullYear();
@@ -1065,22 +1144,104 @@
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayData = history.find(h => h.date === dateStr);
                 const isToday = dateStr === today;
-                // Compare using year, month, day to avoid UTC issues
+                const isSelected = selectedCalDay === dateStr;
                 const isFuture = (year > todayYear) || 
                                 (year === todayYear && month > todayMonth) || 
                                 (year === todayYear && month === todayMonth && d > todayDay);
                 
                 let status = 'missed';
-                if (isFuture) status = 'future';
-                else if (dayData) {
+                let indicators = '';
+                
+                if (isFuture) {
+                    status = 'future';
+                } else if (dayData) {
                     if (dayData.protein >= goals.protein) status = 'hit';
                     else if (dayData.protein >= goals.protein * 0.8) status = 'partial';
+                    
+                    // Add indicators
+                    if (dayData.protein >= goals.protein) {
+                        indicators += '<span class="cal-indicator protein-hit"></span>';
+                    } else if (dayData.protein > 0) {
+                        indicators += '<span class="cal-indicator protein-partial"></span>';
+                    }
+                    if (dayData.workout && dayData.workout.completed) {
+                        indicators += '<span class="cal-indicator workout"></span>';
+                    }
                 }
                 
-                html += `<div class="calendar-day ${status} ${isToday ? 'today' : ''}">${d}</div>`;
+                html += `<div class="calendar-day ${status} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="selectCalDay('${dateStr}')">${d}<div class="cal-indicators">${indicators}</div></div>`;
             }
             
             grid.innerHTML = html;
+        }
+        
+        window.selectCalDay = function(dateStr) {
+            selectedCalDay = dateStr;
+            renderCalendar();
+            showDayDetailProgress(dateStr);
+        };
+        
+        function showDayDetailProgress(dateStr) {
+            const dayData = history.find(h => h.date === dateStr);
+            const detailDiv = document.getElementById('dayDetailProgress');
+            const contentDiv = document.getElementById('dayDetailContentProgress');
+            
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('dayDetailDateProgress').textContent = date.toLocaleDateString('en-US', options);
+            
+            if (!dayData || dayData.protein === 0) {
+                contentDiv.innerHTML = '<div class="day-no-data">📭 No data logged for this day</div>';
+                detailDiv.style.display = 'block';
+                return;
+            }
+            
+            let html = `
+                <div class="day-detail-section">
+                    <h5>📊 Nutrition</h5>
+                    <div class="day-detail-row">
+                        <span class="label">Protein</span>
+                        <span class="value" style="color:${dayData.protein >= goals.protein ? 'var(--accent)' : 'var(--text)'}">${dayData.protein}g / ${goals.protein}g</span>
+                    </div>
+                    <div class="day-detail-row">
+                        <span class="label">Calories</span>
+                        <span class="value">${dayData.calories} / ${goals.calories}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (dayData.foods && dayData.foods.length > 0) {
+                html += `
+                    <div class="day-detail-section">
+                        <h5>🍽️ Foods (${dayData.foods.length})</h5>
+                        <div class="day-detail-foods">
+                            ${dayData.foods.slice(0, 5).map(f => `
+                                <div class="day-food-item">
+                                    <span class="emoji">${f.emoji || '🍽️'}</span>
+                                    <div class="info">${f.name}</div>
+                                    <div class="macros">${f.protein}g</div>
+                                </div>
+                            `).join('')}
+                            ${dayData.foods.length > 5 ? `<div style="text-align:center; font-size:0.8rem; color:var(--text-muted);">+${dayData.foods.length - 5} more</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (dayData.workout && dayData.workout.completed) {
+                html += `
+                    <div class="day-detail-section">
+                        <h5>🏋️ Workout</h5>
+                        <div class="day-detail-row">
+                            <span class="label">${dayData.workout.name}</span>
+                            <span class="value">${dayData.workout.duration || 0} min</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            contentDiv.innerHTML = html;
+            detailDiv.style.display = 'block';
         }
 
         window.openAchievementModal = function(id, isNew = false) {
@@ -1164,19 +1325,27 @@
             showToast('✓ Measurements saved!');
         };
 
-        window.updateRewardText = async function(id, text) {
+        window.saveReward = async function(id) {
             const reward = rewards.find(r => r.id === id);
             if (reward) {
-                reward.reward = text;
+                const nameInput = document.getElementById('rewardName_' + id);
+                const linkInput = document.getElementById('rewardLink_' + id);
+                
+                reward.reward = nameInput?.value?.trim() || '';
+                reward.link = linkInput?.value?.trim() || '';
+                
                 await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+                renderRewards();
+                showToast('✓ Reward saved!');
             }
         };
-
-        window.updateRewardLink = async function(id, link) {
+        
+        window.editReward = function(id) {
             const reward = rewards.find(r => r.id === id);
             if (reward) {
-                reward.link = link;
-                await setDoc(doc(db, 'users', user.uid, 'data', 'rewards'), { list: rewards });
+                // Clear the saved reward to show the form again
+                reward.reward = '';
+                reward.link = '';
                 renderRewards();
             }
         };
@@ -1396,9 +1565,39 @@
         }
 
         function applyTheme() {
-            const theme = localStorage.getItem('theme');
-            if (theme) document.documentElement.setAttribute('data-theme', theme);
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            }
+            updateThemeIcon();
         }
+        
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+        
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        };
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                updateThemeIcon();
+            }
+        });
 
         function openModal(id) {
             document.getElementById(id).classList.add('show');

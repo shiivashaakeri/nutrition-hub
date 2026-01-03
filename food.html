@@ -40,6 +40,8 @@
         
         /* Header - Enhanced */
         .header { padding: 20px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: var(--accent-light); transform: scale(1.05); }
         .header h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; margin-bottom: 18px; }
         
         /* Tabs - Enhanced */
@@ -283,7 +285,10 @@
     <div class="toast" id="toast"></div>
     
     <header class="header">
-        <h1>🍽️ Food</h1>
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <h1>🍽️ Food</h1>
+            <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
+        </div>
         <div class="tabs">
             <button class="tab active" onclick="showTab('recipes')">Recipes</button>
             <button class="tab" onclick="showTab('plate')">🍽️ Build</button>
@@ -1118,9 +1123,39 @@
         };
 
         function applyTheme() {
-            const theme = localStorage.getItem('theme');
-            if (theme) document.documentElement.setAttribute('data-theme', theme);
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            }
+            updateThemeIcon();
         }
+        
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+        
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        };
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                updateThemeIcon();
+            }
+        });
 
         function openModal(id) {
             document.getElementById(id).classList.add('show');

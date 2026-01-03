@@ -32,6 +32,8 @@
         
         /* Header - Enhanced */
         .header { padding: 20px; display: flex; align-items: center; gap: 18px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: var(--accent-light); transform: scale(1.05); }
         .back-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .back-btn:hover { background: var(--accent-light); transform: translateX(-4px); }
         .back-btn:active { transform: scale(0.95); }
@@ -149,9 +151,10 @@
 <body>
     <div class="toast" id="toast"></div>
     
-    <header class="header">
+    <header class="header" style="display:flex; justify-content:space-between; align-items:center;">
         <button class="back-btn" onclick="goBack()">←</button>
         <h1>Profile</h1>
+        <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
     </header>
     
     <div class="profile-card">
@@ -627,9 +630,39 @@
         }
 
         function applyTheme() {
-            const theme = localStorage.getItem('theme');
-            if (theme) document.documentElement.setAttribute('data-theme', theme);
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            }
+            updateThemeIcon();
         }
+        
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+        
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        };
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                updateThemeIcon();
+            }
+        });
 
         window.goBack = function() {
             window.location.href = 'today.html';

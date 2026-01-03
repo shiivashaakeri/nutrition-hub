@@ -40,6 +40,8 @@
         .header-left h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; letter-spacing: -0.02em; }
         .header-left p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
         .header-right { display: flex; align-items: center; gap: 12px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: var(--accent-light); transform: scale(1.05); }
         .sync-indicator { font-size: 0.7rem; color: var(--text-muted); transition: all 0.3s; }
         .sync-indicator.synced { color: var(--accent); }
         .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-light), var(--warm-light)); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; border: 2px solid transparent; transition: all 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -345,6 +347,86 @@
         .streak-stat .value { font-family: var(--font-display); font-size: 1.7rem; font-weight: 400; }
         .streak-stat .label { font-size: 0.75rem; color: var(--text-muted); }
         
+        /* Unified Calendar */
+        .calendar-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; margin-bottom: 12px; }
+        .cal-nav-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+        .cal-nav-btn:hover { background: var(--accent-light); }
+        .cal-month { font-family: var(--font-display); font-size: 1.2rem; font-weight: 400; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: var(--bg-secondary); position: relative; }
+        .cal-day.header { background: transparent; color: var(--text-muted); font-size: 0.7rem; cursor: default; }
+        .cal-day.empty { background: transparent; cursor: default; }
+        .cal-day.other-month { opacity: 0.3; }
+        .cal-day:not(.header):not(.empty):hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1; }
+        .cal-day.today { border: 2px solid var(--accent); }
+        .cal-day.selected { background: var(--accent); color: white; }
+        .cal-day .cal-indicators { display: flex; gap: 3px; margin-top: 3px; }
+        .cal-indicator { width: 6px; height: 6px; border-radius: 50%; }
+        .cal-indicator.protein-hit { background: var(--accent); }
+        .cal-indicator.protein-partial { background: var(--warm); }
+        .cal-indicator.workout { background: #4CAF50; }
+        .calendar-legend { display: flex; justify-content: center; gap: 16px; padding: 14px 0; font-size: 0.75rem; color: var(--text-muted); }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .legend-dot.hit { background: var(--accent); }
+        .legend-dot.partial { background: var(--warm); }
+        .legend-dot.workout { background: #4CAF50; }
+        
+        /* Day Detail */
+        .day-detail { background: var(--bg-secondary); border-radius: 16px; padding: 18px; margin-top: 16px; }
+        .day-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .day-detail-header h4 { font-size: 1rem; font-weight: 600; }
+        .day-detail-section { margin-bottom: 16px; }
+        .day-detail-section:last-child { margin-bottom: 0; }
+        .day-detail-section h5 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .day-detail-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.9rem; }
+        .day-detail-row .label { color: var(--text-secondary); }
+        .day-detail-row .value { font-weight: 600; }
+        .day-detail-foods { margin-top: 8px; }
+        .day-food-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-card); border-radius: 10px; margin-bottom: 6px; font-size: 0.85rem; }
+        .day-food-item .emoji { font-size: 1.2rem; }
+        .day-food-item .info { flex: 1; }
+        .day-food-item .macros { text-align: right; font-size: 0.8rem; color: var(--text-muted); }
+        .day-no-data { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        /* Weekly Summary */
+        .weekly-summary-content { padding: 0 4px; }
+        .weekly-header { text-align: center; margin-bottom: 20px; }
+        .weekly-header h4 { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 4px; }
+        .weekly-header p { font-size: 0.85rem; color: var(--text-muted); }
+        .weekly-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .weekly-stat { background: var(--bg-secondary); border-radius: 14px; padding: 16px; text-align: center; }
+        .weekly-stat.highlight { background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.2)); }
+        .weekly-stat .stat-value { font-family: var(--font-display); font-size: 1.8rem; font-weight: 400; color: var(--accent); }
+        .weekly-stat .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .weekly-stat .stat-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        .weekly-chart { background: var(--bg-secondary); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .weekly-chart h5 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .weekly-bars { display: flex; justify-content: space-between; align-items: flex-end; height: 100px; gap: 8px; }
+        .weekly-bar-container { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .weekly-bar { width: 100%; background: linear-gradient(180deg, var(--accent), #6b7363); border-radius: 6px 6px 0 0; transition: height 0.3s; min-height: 4px; }
+        .weekly-bar.under { background: linear-gradient(180deg, var(--warm), #d4a088); }
+        .weekly-bar-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; }
+        .weekly-highlights { background: linear-gradient(135deg, var(--bg-secondary), var(--accent-light)); border-radius: 14px; padding: 16px; }
+        .weekly-highlights h5 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .highlight-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .highlight-item:last-child { border-bottom: none; }
+        .highlight-item .icon { font-size: 1.5rem; }
+        .highlight-item .info { flex: 1; }
+        .highlight-item .info .title { font-weight: 600; font-size: 0.9rem; }
+        .highlight-item .info .desc { font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Weekly Summary Card on Today Page */
+        .weekly-card { background: linear-gradient(135deg, var(--bg-card), var(--accent-light)); border-radius: 20px; padding: 18px; margin: 0 20px 16px; border: 1px solid var(--border); cursor: pointer; transition: all 0.25s; }
+        .weekly-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        .weekly-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .weekly-card-header h4 { font-size: 0.9rem; font-weight: 600; }
+        .weekly-card-header span { font-size: 0.8rem; color: var(--accent); }
+        .weekly-mini-stats { display: flex; justify-content: space-between; }
+        .weekly-mini-stat { text-align: center; }
+        .weekly-mini-stat .value { font-family: var(--font-display); font-size: 1.3rem; }
+        .weekly-mini-stat .label { font-size: 0.7rem; color: var(--text-muted); }
+        
         /* Ring Detail Modal - Enhanced */
         .ring-detail { text-align: center; margin: 28px 0; }
         .ring-detail .big-value { font-family: var(--font-display); font-size: 3.5rem; font-weight: 400; color: var(--accent); }
@@ -404,6 +486,7 @@
             <p id="dateText">Loading...</p>
         </div>
         <div class="header-right">
+            <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
             <span class="sync-indicator synced" id="syncStatus">● Synced</span>
             <div class="avatar" onclick="openAvatarPicker()" id="avatarBtn">👤</div>
         </div>
@@ -418,6 +501,34 @@
             </div>
         </div>
         <span class="streak-arrow">→</span>
+    </div>
+    
+    <!-- Weekly Summary + Calendar Buttons -->
+    <div style="display:flex; gap:12px; margin:0 20px 16px;">
+        <div class="weekly-card" onclick="openWeeklySummary()" style="flex:1; margin:0;">
+            <div class="weekly-card-header">
+                <h4>📊 This Week</h4>
+                <span>View →</span>
+            </div>
+            <div class="weekly-mini-stats">
+                <div class="weekly-mini-stat">
+                    <div class="value" id="weeklyAvgProtein">--</div>
+                    <div class="label">Avg Protein</div>
+                </div>
+                <div class="weekly-mini-stat">
+                    <div class="value" id="weeklyWorkouts">--</div>
+                    <div class="label">Workouts</div>
+                </div>
+                <div class="weekly-mini-stat">
+                    <div class="value" id="weeklyGoalDays">--</div>
+                    <div class="label">Goals Hit</div>
+                </div>
+            </div>
+        </div>
+        <div class="weekly-card" onclick="openCalendar()" style="flex:0 0 80px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <span style="font-size:1.8rem;">📅</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Calendar</span>
+        </div>
     </div>
     
     <div class="content">
@@ -632,6 +743,46 @@
                 <div class="streak-stat"><div class="value" id="longestStreak">0</div><div class="label">Longest Streak</div></div>
                 <div class="streak-stat"><div class="value" id="totalDays">0</div><div class="label">Total Days</div></div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Unified Calendar Modal -->
+    <div class="modal-overlay" id="calendarModal">
+        <div class="modal" style="max-height:90vh;">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>📅 Calendar</h3>
+                <button class="modal-close" onclick="closeModal('calendarModal')">✕</button>
+            </div>
+            <div class="calendar-nav">
+                <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">←</button>
+                <span class="cal-month" id="calendarMonthLabel">January 2025</span>
+                <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">→</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-legend">
+                <span class="legend-item"><span class="legend-dot hit"></span> Goal Hit</span>
+                <span class="legend-item"><span class="legend-dot partial"></span> Partial</span>
+                <span class="legend-item"><span class="legend-dot workout"></span> Workout</span>
+            </div>
+            <div class="day-detail" id="dayDetail" style="display:none;">
+                <div class="day-detail-header">
+                    <h4 id="dayDetailDate">January 1, 2025</h4>
+                </div>
+                <div class="day-detail-content" id="dayDetailContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weekly Summary Modal -->
+    <div class="modal-overlay" id="weeklySummaryModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3>📊 Weekly Summary</h3>
+                <button class="modal-close" onclick="closeModal('weeklySummaryModal')">✕</button>
+            </div>
+            <div class="weekly-summary-content" id="weeklySummaryContent"></div>
         </div>
     </div>
     
@@ -1100,6 +1251,7 @@
             renderCycle();
             renderSupplements();
             renderSleep();
+            renderWeeklyMiniStats();
             checkShakeSuggestion();
             applyTheme();
             
@@ -1421,9 +1573,41 @@
         };
 
         function applyTheme() {
-            const theme = localStorage.getItem('theme');
-            if (theme) document.documentElement.setAttribute('data-theme', theme);
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                // Auto-detect system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            }
+            updateThemeIcon();
         }
+        
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+        
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        };
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                updateThemeIcon();
+            }
+        });
 
         // Modal Functions
         window.openAddFoodModal = function() {
@@ -1794,6 +1978,325 @@
             document.getElementById('currentStreak').textContent = currentStreak;
             document.getElementById('longestStreak').textContent = longestStreak;
             document.getElementById('totalDays').textContent = history.filter(h => h.protein > 0).length;
+        }
+
+        // ========== UNIFIED CALENDAR ==========
+        let calendarDate = new Date();
+        let selectedCalendarDay = null;
+        
+        window.openCalendar = function() {
+            calendarDate = new Date();
+            selectedCalendarDay = null;
+            renderCalendar();
+            document.getElementById('dayDetail').style.display = 'none';
+            openModal('calendarModal');
+        };
+        
+        window.changeCalendarMonth = function(delta) {
+            calendarDate.setMonth(calendarDate.getMonth() + delta);
+            renderCalendar();
+        };
+        
+        function renderCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            
+            // Update month label
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendarMonthLabel').textContent = `${monthNames[month]} ${year}`;
+            
+            // Build grid
+            const container = document.getElementById('calendarGrid');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let html = days.map(d => `<div class="cal-day header">${d}</div>`).join('');
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayDate = new Date();
+            
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="cal-day empty"></div>';
+            }
+            
+            // Days of month
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayData = history.find(h => h.date === dateStr);
+                const isToday = dateStr === today;
+                const isFuture = new Date(year, month, d) > todayDate;
+                const isSelected = selectedCalendarDay === dateStr;
+                
+                let indicators = '';
+                if (dayData && !isFuture) {
+                    if (dayData.protein >= goals.protein) {
+                        indicators += '<span class="cal-indicator protein-hit"></span>';
+                    } else if (dayData.protein >= goals.protein * 0.5) {
+                        indicators += '<span class="cal-indicator protein-partial"></span>';
+                    }
+                    if (dayData.workout && dayData.workout.completed) {
+                        indicators += '<span class="cal-indicator workout"></span>';
+                    }
+                }
+                
+                const classes = [
+                    'cal-day',
+                    isToday ? 'today' : '',
+                    isFuture ? 'other-month' : '',
+                    isSelected ? 'selected' : ''
+                ].filter(Boolean).join(' ');
+                
+                html += `
+                    <div class="${classes}" onclick="selectCalendarDay('${dateStr}')">
+                        ${d}
+                        <div class="cal-indicators">${indicators}</div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        window.selectCalendarDay = function(dateStr) {
+            selectedCalendarDay = dateStr;
+            renderCalendar();
+            showDayDetail(dateStr);
+        };
+        
+        function showDayDetail(dateStr) {
+            const dayData = history.find(h => h.date === dateStr);
+            const detailDiv = document.getElementById('dayDetail');
+            const contentDiv = document.getElementById('dayDetailContent');
+            
+            // Format date
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('dayDetailDate').textContent = date.toLocaleDateString('en-US', options);
+            
+            if (!dayData || dayData.protein === 0) {
+                contentDiv.innerHTML = '<div class="day-no-data">📭 No data logged for this day</div>';
+                detailDiv.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            
+            // Macros section
+            html += `
+                <div class="day-detail-section">
+                    <h5>📊 Nutrition</h5>
+                    <div class="day-detail-row">
+                        <span class="label">Protein</span>
+                        <span class="value" style="color:${dayData.protein >= goals.protein ? 'var(--accent)' : 'var(--text)'}">${dayData.protein}g / ${goals.protein}g</span>
+                    </div>
+                    <div class="day-detail-row">
+                        <span class="label">Calories</span>
+                        <span class="value">${dayData.calories} / ${goals.calories}</span>
+                    </div>
+                    ${dayData.sleep ? `
+                        <div class="day-detail-row">
+                            <span class="label">Sleep</span>
+                            <span class="value">${dayData.sleep} hours</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Foods section
+            if (dayData.foods && dayData.foods.length > 0) {
+                html += `
+                    <div class="day-detail-section">
+                        <h5>🍽️ Foods (${dayData.foods.length})</h5>
+                        <div class="day-detail-foods">
+                            ${dayData.foods.map(f => `
+                                <div class="day-food-item">
+                                    <span class="emoji">${f.emoji || '🍽️'}</span>
+                                    <div class="info">${f.name}</div>
+                                    <div class="macros">${f.protein}g • ${f.calories} cal</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Workout section
+            if (dayData.workout && dayData.workout.completed) {
+                html += `
+                    <div class="day-detail-section">
+                        <h5>🏋️ Workout</h5>
+                        <div class="day-detail-row">
+                            <span class="label">${dayData.workout.name}</span>
+                            <span class="value">${dayData.workout.duration || 0} min</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Supplements section
+            if (dayData.supplements) {
+                const supps = [];
+                if (dayData.supplements.morning) supps.push('🌅 Morning');
+                if (dayData.supplements.evening) supps.push('🌙 Evening');
+                if (supps.length > 0) {
+                    html += `
+                        <div class="day-detail-section">
+                            <h5>💊 Supplements</h5>
+                            <div class="day-detail-row">
+                                <span class="label">Taken</span>
+                                <span class="value">${supps.join(', ')}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            contentDiv.innerHTML = html;
+            detailDiv.style.display = 'block';
+        }
+        
+        // ========== WEEKLY SUMMARY ==========
+        function renderWeeklyMiniStats() {
+            const weekData = getWeekData();
+            
+            const avgProtein = weekData.length > 0 
+                ? Math.round(weekData.reduce((sum, d) => sum + d.protein, 0) / weekData.length) 
+                : 0;
+            const workoutCount = weekData.filter(d => d.workout && d.workout.completed).length;
+            const goalDays = weekData.filter(d => d.protein >= goals.protein - 200).length;
+            
+            document.getElementById('weeklyAvgProtein').textContent = avgProtein + 'g';
+            document.getElementById('weeklyWorkouts').textContent = workoutCount;
+            document.getElementById('weeklyGoalDays').textContent = goalDays + '/7';
+        }
+        
+        function getWeekData() {
+            const weekData = [];
+            const todayDate = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(todayDate);
+                date.setDate(date.getDate() - i);
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                
+                if (dateStr === today) {
+                    weekData.push({ ...todayData, date: dateStr });
+                } else {
+                    const dayData = history.find(h => h.date === dateStr);
+                    if (dayData) weekData.push(dayData);
+                    else weekData.push({ date: dateStr, protein: 0, calories: 0 });
+                }
+            }
+            return weekData;
+        }
+        
+        window.openWeeklySummary = function() {
+            renderWeeklySummary();
+            openModal('weeklySummaryModal');
+        };
+        
+        function renderWeeklySummary() {
+            const weekData = getWeekData();
+            const container = document.getElementById('weeklySummaryContent');
+            
+            // Calculate stats
+            const daysWithData = weekData.filter(d => d.protein > 0);
+            const totalProtein = weekData.reduce((sum, d) => sum + d.protein, 0);
+            const avgProtein = daysWithData.length > 0 ? Math.round(totalProtein / daysWithData.length) : 0;
+            const totalCalories = weekData.reduce((sum, d) => sum + d.calories, 0);
+            const avgCalories = daysWithData.length > 0 ? Math.round(totalCalories / daysWithData.length) : 0;
+            const workoutCount = weekData.filter(d => d.workout && d.workout.completed).length;
+            const goalDays = weekData.filter(d => d.protein >= goals.protein - 200).length;
+            const avgSleep = weekData.filter(d => d.sleep).length > 0
+                ? (weekData.filter(d => d.sleep).reduce((sum, d) => sum + d.sleep, 0) / weekData.filter(d => d.sleep).length).toFixed(1)
+                : '--';
+            
+            // Best day
+            const bestDay = daysWithData.length > 0 
+                ? daysWithData.reduce((best, d) => d.protein > best.protein ? d : best)
+                : null;
+            
+            // Date range
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 6);
+            const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            
+            // Day names for chart
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const maxProtein = Math.max(...weekData.map(d => d.protein), goals.protein);
+            
+            container.innerHTML = `
+                <div class="weekly-header">
+                    <h4>📊 Your Week</h4>
+                    <p>${dateRange}</p>
+                </div>
+                
+                <div class="weekly-stats-grid">
+                    <div class="weekly-stat highlight">
+                        <div class="stat-value">${avgProtein}g</div>
+                        <div class="stat-label">Avg Protein</div>
+                        <div class="stat-sub">Goal: ${goals.protein}g</div>
+                    </div>
+                    <div class="weekly-stat">
+                        <div class="stat-value">${avgCalories}</div>
+                        <div class="stat-label">Avg Calories</div>
+                    </div>
+                    <div class="weekly-stat">
+                        <div class="stat-value">${goalDays}/7</div>
+                        <div class="stat-label">Goals Hit</div>
+                    </div>
+                    <div class="weekly-stat">
+                        <div class="stat-value">${workoutCount}</div>
+                        <div class="stat-label">Workouts</div>
+                    </div>
+                </div>
+                
+                <div class="weekly-chart">
+                    <h5>Daily Protein</h5>
+                    <div class="weekly-bars">
+                        ${weekData.map((d, i) => {
+                            const height = maxProtein > 0 ? (d.protein / maxProtein) * 100 : 0;
+                            const isUnder = d.protein < goals.protein - 200 && d.protein > 0;
+                            const dayIndex = new Date(d.date).getDay();
+                            return `
+                                <div class="weekly-bar-container">
+                                    <div class="weekly-bar ${isUnder ? 'under' : ''}" style="height:${height}%"></div>
+                                    <span class="weekly-bar-label">${dayNames[dayIndex]}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div class="weekly-highlights">
+                    <h5>Highlights</h5>
+                    ${bestDay ? `
+                        <div class="highlight-item">
+                            <span class="icon">🏆</span>
+                            <div class="info">
+                                <div class="title">Best Day: ${bestDay.protein}g protein</div>
+                                <div class="desc">${new Date(bestDay.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="highlight-item">
+                        <span class="icon">🔥</span>
+                        <div class="info">
+                            <div class="title">${document.getElementById('streakCount').textContent} Day Streak</div>
+                            <div class="desc">Keep it going!</div>
+                        </div>
+                    </div>
+                    ${avgSleep !== '--' ? `
+                        <div class="highlight-item">
+                            <span class="icon">😴</span>
+                            <div class="info">
+                                <div class="title">${avgSleep} hrs avg sleep</div>
+                                <div class="desc">This week</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
         window.openRingDetail = function(type) {
