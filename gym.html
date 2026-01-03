@@ -6,7 +6,8 @@
     <title>Gym | Nutrition Hub</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#7d8471">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/beauty.css">
     <style>
         :root {
             --bg: #faf9f7; --bg-card: #ffffff; --bg-secondary: #f3f1ee;
@@ -15,6 +16,8 @@
             --warm: #c4846c; --warm-light: rgba(196,132,108,0.12);
             --border: rgba(0,0,0,0.06); --nav-height: 70px;
             --success: #4caf50; --error: #e53935;
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
         }
         [data-theme="dark"] {
             --bg: #111110; --bg-card: #1c1c1a; --bg-secondary: #242422;
@@ -22,150 +25,183 @@
             --border: rgba(255,255,255,0.08);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-height) + 20px); }
+        body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-height) + 20px); overflow-x: hidden; }
         
-        .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .loading-screen.hide { display: none; }
+        /* Loading - Enhanced */
+        .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; gap: 16px; }
+        .loading-screen.hide { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+        .loading-logo { font-size: 3rem; animation: pulse 1.5s ease-in-out infinite; }
+        .loading-text { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
         .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-secondary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Header - Enhanced */
         .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .header-actions { display: flex; gap: 8px; align-items: center; }
-        .sync-status { font-size: 0.7rem; color: var(--text-muted); }
+        .header h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 400; display: flex; align-items: center; gap: 12px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .sync-status { font-size: 0.72rem; color: var(--text-muted); transition: all 0.3s; }
         .sync-status.synced { color: var(--accent); }
-        .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--bg-secondary); font-size: 1.1rem; cursor: pointer; }
+        .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--bg-secondary); font-size: 1.1rem; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .icon-btn:hover { transform: scale(1.08); background: var(--accent-light); }
+        .icon-btn:active { transform: scale(0.95); }
         
-        /* Progress Bar */
+        /* Progress Bar - Enhanced */
         .progress-bar-container { margin: 0 20px 20px; }
-        .progress-info { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .progress-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .progress-info span { font-size: 0.85rem; color: var(--text-secondary); }
-        .progress-info strong { color: var(--accent); }
-        .progress-bar { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+        .progress-info strong { color: var(--accent); font-weight: 700; }
+        .progress-bar { height: 10px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #6b7363); border-radius: 6px; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 0 10px rgba(125,132,113,0.3); }
         
-        /* Workout Card */
-        .workout-card { margin: 0 20px 20px; padding: 20px; background: linear-gradient(135deg, var(--accent), #5a6349); border-radius: 20px; color: white; }
-        .workout-card h2 { font-size: 1.3rem; margin-bottom: 4px; }
-        .workout-card p { font-size: 0.9rem; opacity: 0.9; }
-        .workout-stats { display: flex; gap: 24px; margin-top: 16px; }
+        /* Workout Card - Enhanced */
+        .workout-card { margin: 0 20px 24px; padding: 24px; background: linear-gradient(135deg, var(--accent) 0%, #6b7363 50%, #5a6349 100%); border-radius: 24px; color: white; box-shadow: 0 8px 30px rgba(125,132,113,0.35); position: relative; overflow: hidden; }
+        .workout-card::before { content: ''; position: absolute; top: -50%; right: -50%; width: 100%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events: none; }
+        .workout-card h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; margin-bottom: 6px; position: relative; }
+        .workout-card p { font-size: 0.9rem; opacity: 0.9; position: relative; }
+        .workout-stats { display: flex; gap: 28px; margin-top: 20px; position: relative; }
         .workout-stat { text-align: center; }
-        .workout-stat .value { font-size: 1.5rem; font-weight: 700; }
-        .workout-stat .label { font-size: 0.75rem; opacity: 0.8; }
+        .workout-stat .value { font-family: var(--font-display); font-size: 1.7rem; font-weight: 400; }
+        .workout-stat .label { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* Section */
-        .section { margin: 0 20px 20px; }
-        .section-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .section-title .badge { background: var(--warm); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        /* Section - Enhanced */
+        .section { margin: 0 20px 24px; }
+        .section-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+        .section-title .badge { background: linear-gradient(135deg, var(--warm), #b07460); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; box-shadow: 0 2px 6px rgba(196,132,108,0.3); }
         
-        /* Exercise Card */
-        .exercise-card { background: var(--bg-card); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); transition: all 0.15s; }
+        /* Exercise Card - Enhanced */
+        .exercise-card { background: var(--bg-card); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .exercise-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
         .exercise-card.completed { opacity: 0.6; border-left: 4px solid var(--accent); }
-        .exercise-card.core { border-left: 4px solid #ff9500; }
-        .exercise-card.cardio { border-left: 4px solid #42a5f5; }
-        .exercise-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-        .exercise-icon { width: 48px; height: 48px; background: var(--bg-secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .exercise-card.core { border-left: 4px solid #ff9500; background: linear-gradient(90deg, rgba(255,149,0,0.05), transparent); }
+        .exercise-card.cardio { border-left: 4px solid #42a5f5; background: linear-gradient(90deg, rgba(66,165,245,0.05), transparent); }
+        .exercise-header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+        .exercise-icon { width: 52px; height: 52px; background: linear-gradient(135deg, var(--bg-secondary), var(--accent-light)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; transition: transform 0.2s; }
+        .exercise-card:hover .exercise-icon { transform: scale(1.08); }
         .exercise-info { flex: 1; }
-        .exercise-info h3 { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .exercise-info h3 .pr-badge { background: linear-gradient(135deg, #ffd700, #ffb347); color: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; }
-        .exercise-info p { font-size: 0.8rem; color: var(--text-muted); }
-        .exercise-check { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; color: transparent; transition: all 0.15s; }
-        .exercise-check.checked { background: var(--accent); border-color: var(--accent); color: white; }
+        .exercise-info h3 { font-size: 1.02rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .exercise-info h3 .pr-badge { background: linear-gradient(135deg, #ffd700, #ffb347); color: #333; padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; box-shadow: 0 2px 6px rgba(255,215,0,0.3); animation: pulse 2s ease-in-out infinite; }
+        .exercise-info p { font-size: 0.82rem; color: var(--text-muted); }
+        .exercise-check { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; color: transparent; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .exercise-check:hover { border-color: var(--accent); transform: scale(1.1); }
+        .exercise-check.checked { background: linear-gradient(135deg, var(--accent), #6b7363); border-color: var(--accent); color: white; box-shadow: 0 2px 8px rgba(125,132,113,0.3); }
         
-        /* Sets Grid */
-        .sets-grid { display: flex; gap: 8px; }
-        .set-item { flex: 1; background: var(--bg-secondary); border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
-        .set-item:hover { border-color: var(--accent); }
-        .set-item.completed { background: var(--accent-light); border-color: var(--accent); }
-        .set-item .set-num { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
-        .set-item .set-weight { font-size: 1rem; font-weight: 700; }
-        .set-item .set-reps { font-size: 0.75rem; color: var(--text-secondary); }
+        /* Sets Grid - Enhanced */
+        .sets-grid { display: flex; gap: 10px; }
+        .set-item { flex: 1; background: var(--bg-secondary); border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .set-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .set-item:active { transform: scale(0.96); }
+        .set-item.completed { background: linear-gradient(135deg, var(--accent-light), rgba(125,132,113,0.2)); border-color: var(--accent); }
+        .set-item .set-num { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .set-item .set-weight { font-size: 1.05rem; font-weight: 700; }
+        .set-item .set-reps { font-size: 0.78rem; color: var(--text-secondary); }
         
-        /* Cardio Card */
-        .cardio-select { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-        .cardio-option { padding: 10px 16px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.85rem; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
-        .cardio-option:hover { border-color: var(--accent); }
-        .cardio-option.selected { background: var(--accent); color: white; }
-        .cardio-duration { display: flex; align-items: center; gap: 12px; }
-        .cardio-duration input { flex: 1; padding: 14px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; text-align: center; font-family: inherit; color: var(--text); }
-        .cardio-duration input:focus { outline: none; border-color: var(--accent); }
+        /* Cardio Card - Enhanced */
+        .cardio-select { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .cardio-option { padding: 12px 18px; background: var(--bg-secondary); border-radius: 24px; font-size: 0.85rem; cursor: pointer; border: 2px solid transparent; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); font-weight: 500; }
+        .cardio-option:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .cardio-option.selected { background: linear-gradient(135deg, var(--accent), #6b7363); color: white; box-shadow: 0 4px 12px rgba(125,132,113,0.25); }
+        .cardio-duration { display: flex; align-items: center; gap: 14px; }
+        .cardio-duration input { flex: 1; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-size: 1.1rem; text-align: center; font-family: inherit; color: var(--text); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .cardio-duration input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
         .cardio-duration span { font-size: 0.9rem; color: var(--text-secondary); }
         
-        /* Notes */
-        .notes-input { width: 100%; padding: 14px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 12px; font-size: 0.9rem; font-family: inherit; color: var(--text); resize: none; }
-        .notes-input:focus { outline: none; border-color: var(--accent); }
+        /* Notes - Enhanced */
+        .notes-input { width: 100%; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-size: 0.9rem; font-family: inherit; color: var(--text); resize: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .notes-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
         
-        /* Complete Button */
-        .complete-section { padding: 20px; position: sticky; bottom: var(--nav-height); background: var(--bg); border-top: 1px solid var(--border); }
-        .complete-btn { width: 100%; padding: 18px; background: var(--accent); color: white; border: none; border-radius: 14px; font-family: inherit; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.15s; }
-        .complete-btn:hover { opacity: 0.9; }
-        .complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .complete-btn.done { background: var(--success); }
+        /* Complete Button - Enhanced */
+        .complete-section { padding: 20px; position: sticky; bottom: var(--nav-height); background: linear-gradient(180deg, transparent, var(--bg) 20%); border-top: 1px solid var(--border); }
+        .complete-btn { width: 100%; padding: 20px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 16px; font-family: inherit; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 6px 20px rgba(125,132,113,0.35); position: relative; overflow: hidden; }
+        .complete-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
+        .complete-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(125,132,113,0.45); }
+        .complete-btn:hover::before { left: 100%; }
+        .complete-btn:active { transform: scale(0.98); }
+        .complete-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .complete-btn.done { background: linear-gradient(135deg, var(--success), #66bb6a); box-shadow: 0 6px 20px rgba(76,175,80,0.35); }
         
-        /* History */
-        .history-item { background: var(--bg-card); border-radius: 14px; padding: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
+        /* History - Enhanced */
+        .history-item { background: var(--bg-card); border-radius: 18px; padding: 18px; margin-bottom: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .history-item:hover { transform: translateX(6px); box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
         .history-item:active { transform: scale(0.98); }
-        .history-item .icon { font-size: 1.5rem; }
+        .history-item .icon { font-size: 1.6rem; }
         .history-item .info { flex: 1; }
         .history-item .info h4 { font-size: 0.95rem; font-weight: 600; }
         .history-item .info p { font-size: 0.8rem; color: var(--text-muted); }
-        .history-item .arrow { color: var(--text-muted); }
+        .history-item .arrow { color: var(--text-muted); transition: transform 0.2s; }
+        .history-item:hover .arrow { transform: translateX(4px); }
         
-        /* Empty State */
-        .empty-state { text-align: center; padding: 48px 20px; }
-        .empty-state .icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
-        .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; }
-        .empty-state p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
-        .empty-state .btn { display: inline-flex; padding: 14px 24px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+        /* Empty State - Enhanced */
+        .empty-state { text-align: center; padding: 56px 24px; }
+        .empty-state .icon { font-size: 4.5rem; margin-bottom: 20px; opacity: 0.7; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .empty-state h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 400; margin-bottom: 10px; }
+        .empty-state p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; max-width: 280px; margin-left: auto; margin-right: auto; }
+        .empty-state .btn { display: inline-flex; padding: 16px 28px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 14px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 15px rgba(125,132,113,0.3); }
+        .empty-state .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
         
-        /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; }
+        /* Bottom Nav - Enhanced */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.04); }
+        [data-theme="dark"] .bottom-nav { background: rgba(28,28,26,0.9); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 20px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+        .nav-item::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%) scaleX(0); width: 24px; height: 3px; background: var(--accent); border-radius: 2px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
         .nav-item.active { color: var(--accent); }
-        .nav-icon { font-size: 1.4rem; }
+        .nav-item.active::after { transform: translateX(-50%) scaleX(1); }
+        .nav-item:active { transform: scale(0.9); }
+        .nav-icon { font-size: 1.5rem; transition: transform 0.2s; }
+        .nav-item:hover .nav-icon { transform: translateY(-2px); }
         
-        /* Toast */
-        .toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 14px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; z-index: 300; opacity: 0; transition: all 0.3s; }
+        /* Toast - Enhanced */
+        .toast { position: fixed; bottom: calc(var(--nav-height) + 24px); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 16px 26px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; z-index: 300; opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         
-        /* PR Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        /* PR Modal - Enhanced */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.show { opacity: 1; pointer-events: auto; }
-        .modal-center { background: var(--bg-card); border-radius: 24px; width: 90%; max-width: 360px; padding: 32px; text-align: center; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-center { background: rgba(255,255,255,0.97); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-radius: 28px; width: 90%; max-width: 380px; padding: 36px; text-align: center; transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        [data-theme="dark"] .modal-center { background: rgba(28,28,26,0.97); }
         .modal-overlay.show .modal-center { transform: scale(1); }
-        .pr-celebration { margin-bottom: 20px; }
-        .pr-celebration .icon { font-size: 4rem; animation: bounce 0.5s; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .pr-celebration h2 { font-size: 1.5rem; margin: 16px 0 8px; }
-        .pr-celebration p { color: var(--text-secondary); }
-        .pr-details { background: var(--bg-secondary); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
-        .pr-details .exercise { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-        .pr-details .weight { font-size: 2rem; font-weight: 700; color: var(--accent); }
-        .pr-details .old { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-        .pr-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .pr-celebration { margin-bottom: 24px; }
+        .pr-celebration .icon { font-size: 5rem; animation: bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pr-celebration h2 { font-family: var(--font-display); font-size: 1.7rem; font-weight: 400; margin: 18px 0 10px; }
+        .pr-celebration p { color: var(--text-secondary); font-size: 0.95rem; }
+        .pr-details { background: linear-gradient(135deg, var(--bg-secondary), var(--accent-light)); border-radius: 18px; padding: 20px; margin-bottom: 24px; }
+        .pr-details .exercise { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+        .pr-details .weight { font-family: var(--font-display); font-size: 2.5rem; font-weight: 400; color: var(--accent); }
+        .pr-details .old { font-size: 0.88rem; color: var(--text-muted); margin-top: 6px; }
+        .pr-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 15px rgba(125,132,113,0.3); }
+        .pr-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
         
-        /* Set Edit Modal */
-        .modal-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        /* Set Edit Modal - Enhanced */
+        .modal-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-bottom.show { opacity: 1; pointer-events: auto; }
-        .modal-sheet { background: var(--bg-card); border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.3s; }
+        .modal-sheet { background: rgba(255,255,255,0.97); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-radius: 28px 28px 0 0; width: 100%; max-width: 500px; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid rgba(255,255,255,0.5); }
+        [data-theme="dark"] .modal-sheet { background: rgba(28,28,26,0.97); border-top-color: rgba(255,255,255,0.1); }
         .modal-bottom.show .modal-sheet { transform: translateY(0); }
-        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-        .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; }
-        .input-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .modal-handle { width: 44px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto 22px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+        .modal-header h3 { font-family: var(--font-display); font-size: 1.35rem; font-weight: 400; }
+        .modal-close { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; transition: all 0.2s; }
+        .modal-close:hover { background: var(--accent-light); transform: rotate(90deg); }
+        .input-row { display: flex; gap: 14px; margin-bottom: 18px; }
         .input-group { flex: 1; }
-        .input-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; }
-        .input-group input { width: 100%; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 12px; font-size: 1.2rem; text-align: center; font-family: inherit; color: var(--text); }
-        .input-group input:focus { outline: none; border-color: var(--accent); }
-        .save-set-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+        .input-group input { width: 100%; padding: 18px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 14px; font-size: 1.3rem; text-align: center; font-family: inherit; color: var(--text); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .input-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
+        .save-set-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent), #6b7363); color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 15px rgba(125,132,113,0.3); }
+        .save-set-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,132,113,0.4); }
         
         /* Confetti */
         .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div class="loading-screen" id="loadingScreen"><div class="spinner"></div></div>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">🏋️</div>
+        <div class="loading-text">Loading workout...</div>
+    </div>
     <div class="toast" id="toast"></div>
     <canvas class="confetti" id="confetti"></canvas>
     
@@ -262,51 +298,51 @@
                 desc: 'Quad & Glute Focus',
                 icon: '🦵',
                 exercises: [
-                    { id: 'squat', name: 'Barbell Squat', sets: 4, reps: '8-10', icon: '🏋️' },
+                    { id: 'goblet', name: 'Goblet Squat', sets: 3, reps: '10-12', icon: '🏋️' },
                     { id: 'legpress', name: 'Leg Press', sets: 3, reps: '10-12', icon: '🦵' },
                     { id: 'rdl', name: 'Romanian Deadlift', sets: 3, reps: '10-12', icon: '🏋️' },
-                    { id: 'lunges', name: 'Walking Lunges', sets: 3, reps: '12 each', icon: '🚶' },
+                    { id: 'adductor', name: 'Hip Adductor', sets: 3, reps: '12-15', icon: '🦵' },
                     { id: 'legcurl', name: 'Leg Curl', sets: 3, reps: '12-15', icon: '🦵' },
-                    { id: 'calfpress', name: 'Calf Raises', sets: 4, reps: '15-20', icon: '🦶' },
-                ]
-            },
-            lowerB: {
-                name: 'Lower Body B',
-                desc: 'Hamstring & Glute Focus',
-                icon: '🦵',
-                exercises: [
-                    { id: 'deadlift', name: 'Deadlift', sets: 4, reps: '6-8', icon: '🏋️' },
-                    { id: 'hipthrust', name: 'Hip Thrust', sets: 4, reps: '10-12', icon: '🍑' },
-                    { id: 'bulgsplit', name: 'Bulgarian Split Squat', sets: 3, reps: '10 each', icon: '🦵' },
-                    { id: 'legcurl2', name: 'Lying Leg Curl', sets: 3, reps: '12-15', icon: '🦵' },
-                    { id: 'legext', name: 'Leg Extension', sets: 3, reps: '12-15', icon: '🦵' },
-                    { id: 'calf2', name: 'Seated Calf Raise', sets: 4, reps: '15-20', icon: '🦶' },
+                    { id: 'calf', name: 'Calf Raises', sets: 3, reps: '15', icon: '🦶' },
                 ]
             },
             upperA: {
                 name: 'Upper Body A',
-                desc: 'Push Focus',
+                desc: 'Push Emphasis',
                 icon: '💪',
                 exercises: [
-                    { id: 'bench', name: 'Bench Press', sets: 4, reps: '8-10', icon: '🏋️' },
-                    { id: 'ohp', name: 'Overhead Press', sets: 3, reps: '8-10', icon: '🏋️' },
-                    { id: 'incline', name: 'Incline Dumbbell Press', sets: 3, reps: '10-12', icon: '🏋️' },
-                    { id: 'latpd', name: 'Lat Pulldown', sets: 3, reps: '10-12', icon: '💪' },
-                    { id: 'laterals', name: 'Lateral Raises', sets: 3, reps: '12-15', icon: '💪' },
-                    { id: 'tricep', name: 'Tricep Pushdowns', sets: 3, reps: '12-15', icon: '💪' },
+                    { id: 'row', name: 'Seated Cable Row', sets: 4, reps: '10-12', icon: '🏋️' },
+                    { id: 'lat', name: 'Lat Pulldown', sets: 3, reps: '10-12', icon: '💪' },
+                    { id: 'chest', name: 'Chest Press', sets: 3, reps: '10-12', icon: '🏋️' },
+                    { id: 'shoulder', name: 'Shoulder Press', sets: 3, reps: '10-12', icon: '💪' },
+                    { id: 'face', name: 'Face Pulls', sets: 3, reps: '15', icon: '💪' },
+                    { id: 'bicep', name: 'Bicep Curls', sets: 2, reps: '12', icon: '💪' },
+                ]
+            },
+            lowerB: {
+                name: 'Lower Body B',
+                desc: 'Glute & Hamstring',
+                icon: '🍑',
+                exercises: [
+                    { id: 'legpressw', name: 'Leg Press (Wide)', sets: 3, reps: '10-12', icon: '🦵' },
+                    { id: 'thrust', name: 'Hip Thrust', sets: 3, reps: '12', icon: '🍑' },
+                    { id: 'abductor', name: 'Hip Abductor', sets: 3, reps: '12-15', icon: '🦵' },
+                    { id: 'legext', name: 'Leg Extension', sets: 3, reps: '12-15', icon: '🦵' },
+                    { id: 'legcurl2', name: 'Leg Curl', sets: 3, reps: '12-15', icon: '🦵' },
+                    { id: 'calf2', name: 'Calf Raises', sets: 3, reps: '15', icon: '🦶' },
                 ]
             },
             upperB: {
                 name: 'Upper Body B',
-                desc: 'Pull Focus',
-                icon: '💪',
+                desc: 'Back Emphasis',
+                icon: '🔙',
                 exercises: [
-                    { id: 'dbrow', name: 'Dumbbell Rows', sets: 4, reps: '8-10 each', icon: '🏋️' },
-                    { id: 'pullup', name: 'Pull-ups/Assisted', sets: 3, reps: '8-10', icon: '💪' },
-                    { id: 'latpd', name: 'Lat Pulldown', sets: 3, reps: '10-12', icon: '💪' },
-                    { id: 'facepull', name: 'Face Pulls', sets: 3, reps: '15-20', icon: '💪' },
-                    { id: 'bicep', name: 'Bicep Curls', sets: 3, reps: '12-15', icon: '💪' },
-                    { id: 'hammer', name: 'Hammer Curls', sets: 3, reps: '12-15', icon: '💪' },
+                    { id: 'dbrow', name: 'DB Row', sets: 4, reps: '10-12', icon: '🏋️' },
+                    { id: 'latunder', name: 'Lat Pulldown (Under)', sets: 3, reps: '10-12', icon: '💪' },
+                    { id: 'incline', name: 'Incline DB Press', sets: 3, reps: '10-12', icon: '🏋️' },
+                    { id: 'lateral', name: 'Lateral Raises', sets: 3, reps: '12-15', icon: '💪' },
+                    { id: 'facepull', name: 'Face Pulls', sets: 3, reps: '15', icon: '💪' },
+                    { id: 'hammer', name: 'Hammer Curls', sets: 2, reps: '12', icon: '💪' },
                 ]
             }
         };

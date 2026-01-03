@@ -1,0 +1,721 @@
+/* ============================================
+   NUTRITION HUB - BEAUTIFICATION LAYER
+   Advanced animations, micro-interactions, polish
+   ============================================ */
+
+/* ============================================
+   FONTS - Adding a display font for headers
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    
+    /* Enhanced shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.06), 0 5px 10px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02);
+    --shadow-xl: 0 20px 40px rgba(0,0,0,0.08), 0 10px 20px rgba(0,0,0,0.04);
+    --shadow-glow: 0 0 30px rgba(125,132,113,0.15);
+    --shadow-warm-glow: 0 0 30px rgba(196,132,108,0.15);
+    
+    /* Timing functions */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
+    --spring: cubic-bezier(0.5, 1.8, 0.5, 0.8);
+    
+    /* Animation durations */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.25s;
+    --duration-slow: 0.4s;
+    --duration-slower: 0.6s;
+}
+
+/* ============================================
+   PAGE LOAD ANIMATIONS
+   ============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes ringFill {
+    from { stroke-dashoffset: 251.2; }
+}
+
+@keyframes gentleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+}
+
+@keyframes confettiBurst {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+    100% { transform: scale(1) rotate(360deg); opacity: 0; }
+}
+
+/* ============================================
+   STAGGERED ANIMATION CLASSES
+   ============================================ */
+.animate-in {
+    animation: fadeInUp var(--duration-slow) var(--ease-out-expo) forwards;
+    opacity: 0;
+}
+
+.animate-in-scale {
+    animation: fadeInScale var(--duration-slow) var(--ease-out-expo) forwards;
+    opacity: 0;
+}
+
+.animate-in-right {
+    animation: slideInRight var(--duration-slow) var(--ease-out-expo) forwards;
+    opacity: 0;
+}
+
+.animate-pop {
+    animation: popIn var(--duration-slow) var(--ease-out-back) forwards;
+    opacity: 0;
+}
+
+/* Stagger delays */
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+.delay-7 { animation-delay: 0.35s; }
+.delay-8 { animation-delay: 0.4s; }
+.delay-9 { animation-delay: 0.45s; }
+.delay-10 { animation-delay: 0.5s; }
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 0%,
+        rgba(255,255,255,0.1) 50%,
+        var(--bg-secondary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+.skeleton-text {
+    height: 14px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+}
+
+.skeleton-text.short { width: 40%; }
+.skeleton-text.medium { width: 70%; }
+.skeleton-text.long { width: 100%; }
+
+.skeleton-circle {
+    border-radius: 50%;
+}
+
+.skeleton-card {
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+/* ============================================
+   ENHANCED CARDS
+   ============================================ */
+.card-elevated {
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.card-elevated:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-elevated:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-glass {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+}
+
+[data-theme="dark"] .card-glass {
+    background: rgba(28,28,26,0.8);
+    border-color: rgba(255,255,255,0.08);
+}
+
+.card-gradient {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(180deg, var(--accent-light) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ============================================
+   ENHANCED BUTTONS
+   ============================================ */
+.btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-enhanced:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-enhanced:active {
+    transform: scale(0.96);
+}
+
+.btn-primary-glow {
+    box-shadow: 0 4px 15px rgba(125,132,113,0.3);
+}
+
+.btn-primary-glow:hover {
+    box-shadow: 0 6px 20px rgba(125,132,113,0.4);
+    transform: translateY(-2px);
+}
+
+.btn-warm-glow {
+    box-shadow: 0 4px 15px rgba(196,132,108,0.3);
+}
+
+.btn-warm-glow:hover {
+    box-shadow: 0 6px 20px rgba(196,132,108,0.4);
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   ENHANCED MODALS
+   ============================================ */
+.modal-glass {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-top: 1px solid rgba(255,255,255,0.5);
+}
+
+[data-theme="dark"] .modal-glass {
+    background: rgba(28,28,26,0.95);
+    border-top-color: rgba(255,255,255,0.1);
+}
+
+.modal-overlay-blur {
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ============================================
+   ENHANCED INPUTS
+   ============================================ */
+.input-enhanced {
+    transition: all var(--duration-normal) var(--ease-out-expo);
+    box-shadow: var(--shadow-sm);
+}
+
+.input-enhanced:focus {
+    box-shadow: 0 0 0 3px var(--accent-light), var(--shadow-md);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.input-enhanced:hover:not(:focus) {
+    border-color: var(--text-muted);
+}
+
+/* ============================================
+   ENHANCED PROGRESS RINGS
+   ============================================ */
+.ring-animated {
+    transition: stroke-dashoffset 1s var(--ease-out-expo);
+}
+
+.ring-container-enhanced {
+    filter: drop-shadow(var(--shadow-glow));
+}
+
+.ring-container-enhanced:hover {
+    filter: drop-shadow(0 0 20px rgba(125,132,113,0.25));
+}
+
+/* ============================================
+   ENHANCED NAVIGATION
+   ============================================ */
+.nav-enhanced {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.05);
+}
+
+[data-theme="dark"] .nav-enhanced {
+    background: rgba(28,28,26,0.9);
+}
+
+.nav-item-enhanced {
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.nav-item-enhanced::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 20px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.nav-item-enhanced.active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+.nav-item-enhanced:active {
+    transform: scale(0.9);
+}
+
+/* ============================================
+   ENHANCED EMPTY STATES
+   ============================================ */
+.empty-state-enhanced {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.empty-state-enhanced .illustration {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.empty-state-enhanced h4 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.empty-state-enhanced p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+
+/* ============================================
+   ENHANCED HEADERS
+   ============================================ */
+.header-enhanced h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.header-gradient {
+    position: relative;
+}
+
+.header-gradient::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, transparent, var(--bg));
+    pointer-events: none;
+}
+
+/* ============================================
+   ENHANCED BADGES & PILLS
+   ============================================ */
+.badge-enhanced {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all var(--duration-fast) var(--ease-out-expo);
+}
+
+.badge-accent {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.badge-warm {
+    background: var(--warm-light);
+    color: var(--warm);
+}
+
+.badge-success {
+    background: rgba(76,175,80,0.12);
+    color: #4caf50;
+}
+
+.badge-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   ENHANCED LIST ITEMS
+   ============================================ */
+.list-item-enhanced {
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.list-item-enhanced::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+    transform: scaleY(0);
+    transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.list-item-enhanced:hover::before,
+.list-item-enhanced:active::before {
+    transform: scaleY(1);
+}
+
+.list-item-enhanced:active {
+    transform: scale(0.98);
+}
+
+/* ============================================
+   ENHANCED ICONS
+   ============================================ */
+.icon-bounce:hover {
+    animation: gentleBounce 0.5s var(--ease-out-expo);
+}
+
+.icon-wiggle:hover {
+    animation: wiggle 0.5s var(--ease-out-expo);
+}
+
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition: all var(--duration-normal) var(--ease-out-expo);
+}
+
+.icon-container:hover {
+    transform: scale(1.1);
+}
+
+/* ============================================
+   ENHANCED STREAKS & REWARDS
+   ============================================ */
+.streak-fire {
+    animation: wiggle 1s ease-in-out infinite;
+}
+
+.reward-sparkle {
+    position: relative;
+}
+
+.reward-sparkle::before,
+.reward-sparkle::after {
+    content: '✨';
+    position: absolute;
+    font-size: 0.8rem;
+    opacity: 0;
+    animation: confettiBurst 2s ease-out infinite;
+}
+
+.reward-sparkle::before {
+    top: -10px;
+    left: 0;
+    animation-delay: 0s;
+}
+
+.reward-sparkle::after {
+    top: -5px;
+    right: 0;
+    animation-delay: 1s;
+}
+
+/* ============================================
+   ENHANCED WATER TRACKER
+   ============================================ */
+.water-glass-enhanced {
+    position: relative;
+    overflow: hidden;
+}
+
+.water-glass-enhanced::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0;
+    background: linear-gradient(180deg, rgba(66,165,245,0.3), rgba(66,165,245,0.5));
+    transition: height var(--duration-slow) var(--ease-out-expo);
+    border-radius: inherit;
+}
+
+.water-glass-enhanced.filled::before {
+    height: 100%;
+}
+
+.water-glass-enhanced .icon {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
+   ENHANCED TOOLTIPS
+   ============================================ */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    padding: 8px 12px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--duration-fast) var(--ease-out-expo);
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+/* ============================================
+   ENHANCED TOAST NOTIFICATIONS
+   ============================================ */
+.toast-enhanced {
+    background: var(--text);
+    color: var(--bg);
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-enhanced .icon {
+    font-size: 1.2rem;
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #4caf50, #66bb6a);
+    color: white;
+}
+
+.toast-error {
+    background: linear-gradient(135deg, #e53935, #ef5350);
+    color: white;
+}
+
+/* ============================================
+   ENHANCED CONFETTI
+   ============================================ */
+.confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* ============================================
+   SUBTLE TEXTURE OVERLAY
+   ============================================ */
+.texture-grain::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   FOCUS VISIBLE STYLES
+   ============================================ */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
